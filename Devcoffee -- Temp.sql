@@ -37,7 +37,7 @@ where ci.dateacct between '2024-11-01' and '2024-11-30'
 	and ci.c_bpartner_id = 5092534;
 
 -- Pagamentos 
-select cp.c_invoice_id , cp.c_payment_id ,cp.user1_id , cp.user2_id , cp.datetrx,cp.payamt,cp.isreceipt, cp.cof_processing3,
+select cp.c_invoice_id , cp.c_payment_id ,cp.user1_id , cp.user2_id , cp.datetrx,cp.payamt,cp.isreceipt, cp.cof_processing3, cp.c_charge_id ,
 * from c_payment cp
 where cp.datetrx  between '2024-11-01' and '2024-11-30'
 	and cp.c_bpartner_id = 5092534;
@@ -78,11 +78,11 @@ where cips.duedate between '2024-11-01' and '2024-11-30'
  * from c_bankstatementline cbkl
   	left join c_allocationline cal on cal.c_payment_id  = cbkl.c_payment_id 
   	left join c_invoice ci on cal.c_invoice_id = ci.c_invoice_id 
-  where cbkl.c_bpartner_id = 5025659 and cbkl.dateacct between '2024-11-01' and '2024-12-30';
+  where cbkl.c_bpartner_id = 5092534 and cbkl.dateacct between '2024-11-01' and '2024-12-30';
  
 --Extrato linhas com inner joins para rastreamento de pagamentos antecipados 
 select cbkl.c_payment_id, cbkl.c_payment_id ,cp.c_payment_id,ci.c_invoice_id ,ci.user1_id, cp.user1_id,
-	coalesce (ci.user1_id,cp.user2_id ,ci.user2_id,cp.user2_id,0) as cc_valid
+	coalesce (ci.user1_id,cp.user2_id ,ci.user2_id,cp.user2_id,0) as cc_valid,cp.cof_processing3
 from c_bankstatementline cbkl
   	left join c_allocationline cal on cal.c_payment_id  = cbkl.c_payment_id 
   	left join c_invoice ci on cal.c_invoice_id = ci.c_invoice_id 
@@ -95,15 +95,13 @@ SELECT tipo, ad_client_id, ad_org_id, c_bpartner_id, user1_id, user2_id, c_activ
 FROM adempiere.rv_cof_relatorioregimecaixa_acero;
 
 
+SELECT al.c_payment_id,
+            sum(currencyconvert(COALESCE(al.amount, 0::numeric) + COALESCE(al.discountamt, 0::numeric) + COALESCE(al.writeoffamt, 0::numeric), ah.c_currency_id, ah.c_currency_id, ah.datetrx::timestamp with time zone, NULL::numeric, al.ad_client_id, al.ad_org_id)) AS valor_aberto
+           FROM c_allocationline al --alocação de pagamentos linhas
+             JOIN c_allocationhdr ah ON al.c_allocationhdr_id = ah.c_allocationhdr_id --alocação de pagamentos cab.
+          WHERE ah.isactive = 'Y'::bpchar AND (ah.docstatus = ANY (ARRAY['CO'::bpchar, 'CL'::bpchar])) 
+          AND ah.dateacct between to_timestamp('2024-11-01'::text, 'YYYY-MM-DD'::text) and to_timestamp('2024-11-30'::text, 'YYYY-MM-DD'::text)
+          GROUP BY al.c_payment_id;
 
-SELECT al.c_invoice_id,
-            				al.c_payment_id,
-           					 al.c_allocationline_id,
-            				sum(currencyconvert(al.amount + al.discountamt + al.writeoffamt, ah.c_currency_id, ah.c_currency_id, ah.datetrx::timestamp with time zone,
-            						NULL::numeric, al.ad_client_id, al.ad_org_id)) AS valor_alocado
-           				FROM c_allocationline al --alocacao de pagamentos linhas 
-            	 			JOIN c_allocationhdr ah ON al.c_allocationhdr_id = ah.c_allocationhdr_id --alocacao de pagamentos 
-          				WHERE ah.isactive = 'Y'::bpchar AND (ah.docstatus = ANY (ARRAY['CO'::bpchar, 'CL'::bpchar])) AND ah.dateacct < to_timestamp('2024-12-31'::text, 'YYYY-MM-DD'::text)
-          				and al.c_bpartner_id =5025659
-          				GROUP BY al.c_invoice_id, al.c_payment_id, al.c_allocationline_id;
+
 

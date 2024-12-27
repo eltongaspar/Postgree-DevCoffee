@@ -4,6 +4,7 @@
 --TABLESPACE pg_default
 SELECT 'PAGAMENTO_DIRETO_COM_FINALIDADE'::text AS tipo,
     p.ad_client_id,
+    p.c_payment_id,
     p.ad_org_id,
     p.c_bpartner_id,
     p.user1_id,
@@ -46,10 +47,12 @@ SELECT 'PAGAMENTO_DIRETO_COM_FINALIDADE'::text AS tipo,
   		AND p.ad_client_id = 5000017::numeric
   GROUP BY 'PAGAMENTO_DIRETO_COM_FINALIDADE'::text, p.ad_client_id, p.ad_org_id, p.c_bpartner_id, p.user1_id, p.user2_id, p.c_activity_id, p.c_charge_id, 
   			0::integer, p.cof_c_planofinanceiro_id, bp.value, bp.name, pf.value, pf.name, c.name, c.name, cc.value, cc.name, cc2.value, cc2.name, a.value, 
-  			a.name, (cof_getreflistvalue('COF_C_PlanoFinanceiro'::character varying, 'AccountType'::character varying, pf.accounttype::character varying)), p.datetrx, p.isreceipt
+  			a.name, (cof_getreflistvalue('COF_C_PlanoFinanceiro'::character varying, 'AccountType'::character varying, pf.accounttype::character varying)), p.datetrx, p.isreceipt,
+  			 p.c_payment_id  			
 UNION ALL
  SELECT 'ALOCACAO_CONTRA_FINALIDADE'::text AS tipo,
     p.ad_client_id,
+    p.c_payment_id,
     p.ad_org_id,
     p.c_bpartner_id,
     p.user1_id,
@@ -93,10 +96,11 @@ UNION ALL
   		AND p.ad_client_id = 5000017::numeric
   GROUP BY 'ALOCACAO_CONTRA_FINALIDADE'::text, p.ad_client_id, p.ad_org_id, p.c_bpartner_id, p.user1_id, p.user2_id, p.c_activity_id, p.c_charge_id, 
  		0::integer, p.cof_c_planofinanceiro_id, bp.value, bp.name, pf.value, pf.name, c.name, c.name, cc.value, cc.name, cc2.value, cc2.name, a.value, 
- 		a.name, (cof_getreflistvalue('COF_C_PlanoFinanceiro'::character varying, 'AccountType'::character varying, pf.accounttype::character varying)), p.datetrx, h.dateacct, p.isreceipt
+ 		a.name, (cof_getreflistvalue('COF_C_PlanoFinanceiro'::character varying, 'AccountType'::character varying, pf.accounttype::character varying)), p.datetrx, h.dateacct, p.isreceipt, p.c_payment_id
 UNION ALL
  SELECT 'ALOCACAO_FATURA'::text AS tipo,
     p.ad_client_id,
+      p.c_payment_id,
     p.ad_org_id,
     p.c_bpartner_id,
     COALESCE(il.user1_id, i.user1_id, p.user1_id) AS user1_id,
@@ -161,10 +165,11 @@ UNION ALL
  		(COALESCE(il.user2_id, i.user2_id, p.user2_id)), (COALESCE(il.c_activity_id, i.c_activity_id, p.c_activity_id)), il.c_charge_id, il.m_product_id, 
  		(COALESCE(i.cof_c_planofinanceiro_id, p.cof_c_planofinanceiro_id)), p.c_payment_id, i.c_invoice_id, bp.value, bp.name, pf.value, pf.name, (COALESCE(pr.value, c.name)), 
  		(COALESCE(pr.name, c.name, c.description)), cc.value, cc.name, cc2.value, cc2.name, a.value, a.name, idt.docbasetype, h.c_allocationline_id, 
- 		(cof_getreflistvalue('COF_C_PlanoFinanceiro'::character varying, 'AccountType'::character varying, pf.accounttype::character varying)), p.datetrx, h.dateacct, p.isreceipt
+ 		(cof_getreflistvalue('COF_C_PlanoFinanceiro'::character varying, 'AccountType'::character varying, pf.accounttype::character varying)), p.datetrx, h.dateacct, p.isreceipt, p.c_payment_id
 UNION all
  SELECT 'ANTECIPACAO'::text AS tipo,
     p.ad_client_id,
+    p.c_payment_id,
     p.ad_org_id,
     p.c_bpartner_id,
     p.user1_id,
@@ -213,5 +218,5 @@ UNION all
   		AND (p.docstatus = ANY (ARRAY['CO'::bpchar, 'CL'::bpchar])) AND p.ad_client_id = 5000017::numeric
   GROUP BY 'ANTECIPACAO'::text, p.ad_client_id, p.ad_org_id, p.c_bpartner_id, p.user1_id, p.user2_id, p.c_activity_id, p.c_charge_id, 0::integer, p.cof_c_planofinanceiro_id, 
   			bp.value, bp.name, pf.value, pf.name, 'ANTECIPACAO'::text, 'PAGAMENTOS E RECEBIMENTOS ANTECIPADOS'::text, cc.value, cc.name, cc2.value, cc2.name, a.value, 
-  			a.name, (cof_getreflistvalue('COF_C_PlanoFinanceiro'::character varying, 'AccountType'::character varying, pf.accounttype::character varying)), p.datetrx, p.isreceipt;
+  			a.name, (cof_getreflistvalue('COF_C_PlanoFinanceiro'::character varying, 'AccountType'::character varying, pf.accounttype::character varying)), p.datetrx, p.isreceipt, p.c_payment_id;
 --WITH DATA;
