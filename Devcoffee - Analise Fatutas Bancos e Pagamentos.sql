@@ -117,6 +117,7 @@ from c_bankstatementline cbkl
 	left join c_elementvalue cc on cc.c_elementvalue_id = coalesce(cp.user1_id,cp.user2_id,ci.user1_id,ci.user2_id,cil.user1_id,cil.user2_id,
 																	cilcc.cil_cc,calant.cacicil_cc,0) --cc
 	where cbkl.ad_client_id = 5000017
+	and cbkl.c_bpartner_id = 5092534
 	--and cbkl.ad_org_id  = 5000047 -- codigo empresa
 	--and cbk.c_bankaccount_id In (5000219,5000392) -- bancos 5000392
 	and cbkl.isactive  = 'Y' --registro ativo
