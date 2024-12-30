@@ -25,10 +25,11 @@ select cbkl.dateacct as data_pagamento, cbkl.created as data_emissão, ao.ad_org
 		cb.c_bpartner_id  as pareceito_id,cb."name" as parceiro_nome,
 		case when (cc.c_elementvalue_id is null and cp.reversal_id is not null) or (cp.docstatus = 'RE') or (cbk.docstatus  = 'RE') or (cp.docstatus = 'RE')
 						or (cbkl.description like ('%^%') or cbkl.description like ('%<%') or cbkl.description like ('%>%'))
-			then -1
-			when cc.c_elementvalue_id is null then 0
+				then -1
+			when cc.c_elementvalue_id is null 
+				then 0
 			else cc.c_elementvalue_id
-			end as centro_custo_id, 
+		end as centro_custo_id, 
 		case when (cc."name" is null and cp.reversal_id is not null) or (cp.docstatus = 'RE') or (cbk.docstatus  = 'RE') or (cp.docstatus = 'RE')
 						or (cbkl.description like ('%^%') or cbkl.description like ('%<%') or cbkl.description like ('%>%'))
 			then 'ESTORNO'
@@ -36,6 +37,12 @@ select cbkl.dateacct as data_pagamento, cbkl.created as data_emissão, ao.ad_org
 			else cc."name" 
 		end as centro_custo_nome,
 		cc.value as cc_ref,
+		case when ((cc.c_elementvalue_id is not null and cp.reversal_id is null) or (cp.docstatus not in ('RE')) or (cbk.docstatus not in ('RE')) or (cp.docstatus not in ('RE'))
+								or (cbkl.description not like ('%^%') or cbkl.description not like ('%<%') or cbkl.description not like ('%>%'))) 
+						and cc.c_elementvalue_id in (5041450) and cical.invoice_list is null
+			then 'Analisar' 
+			else 'OK'
+		end as Valid_Antecipacao,
 	 cdoc.c_doctype_id as dooc_id ,cdoc."name" as doc_nome,
 	 cbkl.trxamt as valor , cbk.beginningbalance as saldo_inicial , cbk.endingbalance as saldo_final ,
 	 cp.isreceipt movimento_id ,
@@ -118,7 +125,7 @@ from c_bankstatementline cbkl
 	left join c_elementvalue cc on cc.c_elementvalue_id = coalesce(cp.user1_id,cp.user2_id,ci.user1_id,ci.user2_id,cil.user1_id,cil.user2_id,
 																	cilcc.cil_cc,calant.cacicil_cc,0) --cc
 	where cbkl.ad_client_id = 5000017
-	and cbkl.c_bpartner_id = 5092534
+	--and cbkl.c_bpartner_id = 5092534
 	--and cbkl.ad_org_id  = 5000047 -- codigo empresa
 	--and cbk.c_bankaccount_id In (5000219,5000392) -- bancos 5000392
 	and cbkl.isactive  = 'Y' --registro ativo
