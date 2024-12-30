@@ -54,7 +54,7 @@ select * from c_allocationhdr ca
 where ca.datetrx between '2024-11-01' and '2024-11-30';
 
 --Extrato linhas
-select cbkl.c_payment_id ,cbkl.c_invoice_id ,cbkl.trxamt,
+select cbkl.ad_org_id ,cbkl.c_payment_id ,cbkl.c_invoice_id ,cbkl.trxamt,
 * from c_bankstatementline cbkl
 where cbkl.dateacct between '2024-11-01' and '2024-11-30'
 	and cbkl.isactive  = 'Y' --registro ativo
@@ -94,7 +94,7 @@ group by cbkl.c_payment_id, cbkl.c_payment_id ,cp.c_payment_id,
 SELECT tipo, ad_client_id, ad_org_id, c_bpartner_id, user1_id, user2_id, c_activity_id, c_charge_id, m_product_id, cof_c_planofinanceiro_id, chave_parceiro, nome_parceiro, tipo_plano_financeiro, chave_plano_financeiro, plano_financeiro, chave_produto_finalidade, produto_finalidade, chave_centro_custo, centro_custo, chave_centro_custo2, centro_custo2, chave_atividade, atividade, valor_pagamento, paydate, cof_allocationdate, isreceipt
 FROM adempiere.rv_cof_relatorioregimecaixa_acero;
 
-
+--analise 
 SELECT al.c_payment_id,
             sum(currencyconvert(COALESCE(al.amount, 0::numeric) + COALESCE(al.discountamt, 0::numeric) + COALESCE(al.writeoffamt, 0::numeric), ah.c_currency_id, ah.c_currency_id, ah.datetrx::timestamp with time zone, NULL::numeric, al.ad_client_id, al.ad_org_id)) AS valor_aberto
            FROM c_allocationline al --alocação de pagamentos linhas
@@ -102,6 +102,77 @@ SELECT al.c_payment_id,
           WHERE ah.isactive = 'Y'::bpchar AND (ah.docstatus = ANY (ARRAY['CO'::bpchar, 'CL'::bpchar])) 
           AND ah.dateacct between to_timestamp('2024-11-01'::text, 'YYYY-MM-DD'::text) and to_timestamp('2024-11-30'::text, 'YYYY-MM-DD'::text)
           GROUP BY al.c_payment_id;
+
+--analise 
+SELECT 'ALOCACAO_FATURA'::text AS tipo,
+    p.ad_client_id,
+      p.c_payment_id,
+    p.ad_org_id,
+    p.c_bpartner_id,
+    COALESCE(il.user1_id, i.user1_id, p.user1_id) AS user1_id,
+    COALESCE(il.user2_id, i.user2_id, p.user2_id) AS user2_id,
+    COALESCE(il.c_activity_id, i.c_activity_id, p.c_activity_id) AS c_activity_id,
+    il.c_charge_id,
+    il.m_product_id,
+    COALESCE(i.cof_c_planofinanceiro_id, p.cof_c_planofinanceiro_id) AS cof_c_planofinanceiro_id,
+    bp.value AS chave_parceiro,
+    bp.name AS nome_parceiro,
+    cof_getreflistvalue('COF_C_PlanoFinanceiro'::character varying, 'AccountType'::character varying, pf.accounttype::character varying) AS tipo_plano_financeiro,
+    pf.value AS chave_plano_financeiro,
+    pf.name AS plano_financeiro,
+    COALESCE(pr.value, c.name) AS chave_produto_finalidade,
+    COALESCE(pr.name, c.name, c.description) AS produto_finalidade,
+    cc.value AS chave_centro_custo,
+    cc.name AS centro_custo,
+    cc2.value AS chave_centro_custo2,
+    cc2.name AS centro_custo2,
+    a.value AS chave_atividade,
+    a.name AS atividade,
+    sum(il.linenetamt) * max(invoicepaidtodate.valor_alocado) /
+        CASE
+            WHEN max(i.totallines) = 0::numeric THEN 1::numeric
+            ELSE max(i.totallines)
+        END AS valor_pagamento,
+    p.datetrx AS paydate,
+    h.dateacct AS cof_allocationdate,
+    p.isreceipt
+   FROM c_payment p --pagamentos 
+     LEFT JOIN c_currency cur ON cur.c_currency_id = p.c_currency_id --projetos 
+     LEFT JOIN c_bpartner bp ON bp.c_bpartner_id = p.c_bpartner_id --parceiros
+     LEFT JOIN rv_allocation h --visao alocamentos financeiros 
+     		ON h.c_payment_id = p.c_payment_id 
+     		AND h.datetrx >= to_timestamp('2024-11-01'::text, 'YYYY-MM-DD'::text) 
+     		AND h.datetrx <= to_timestamp('2024-11-30'::text, 'YYYY-MM-DD'::text) 
+     		AND (h.docstatus = ANY (ARRAY['CO'::bpchar, 'CL'::bpchar]))
+     LEFT JOIN c_invoice i ON h.c_invoice_id = i.c_invoice_id --faturas
+     LEFT JOIN c_invoiceline il ON il.c_invoice_id = i.c_invoice_id AND il.isdescription = 'N'::bpchar --faturas linhas 
+     LEFT JOIN m_product pr ON pr.m_product_id = il.m_product_id --produtos 
+     LEFT JOIN c_charge c ON c.c_charge_id = il.c_charge_id --lançamentos específicos de cobranças ou encargos.
+     LEFT JOIN c_doctype idt ON idt.c_doctype_id = i.c_doctype_id ---tipos de documentos 
+     LEFT JOIN c_elementvalue cc ON cc.c_elementvalue_id = COALESCE(il.user1_id, i.user1_id, p.user1_id) --centro de custos 
+     LEFT JOIN c_elementvalue cc2 ON cc2.c_elementvalue_id = COALESCE(il.user2_id, i.user2_id, p.user2_id) --centro de custos 2
+     LEFT JOIN c_activity a ON a.c_activity_id = COALESCE(il.c_activity_id, i.c_activity_id, p.c_activity_id) -- atividades financeiras
+     LEFT JOIN cof_c_planofinanceiro pf ON pf.cof_c_planofinanceiro_id = COALESCE(i.cof_c_planofinanceiro_id, p.cof_c_planofinanceiro_id) --plano financeiro 
+     LEFT JOIN LATERAL ( SELECT al.c_invoice_id,
+            				al.c_payment_id,
+           					 al.c_allocationline_id,
+            				sum(currencyconvert(al.amount + al.discountamt + al.writeoffamt, ah.c_currency_id, ah.c_currency_id, ah.datetrx::timestamp with time zone,
+            						NULL::numeric, al.ad_client_id, al.ad_org_id)) AS valor_alocado
+           				FROM c_allocationline al --alocacao de pagamentos linhas 
+            	 			JOIN c_allocationhdr ah ON al.c_allocationhdr_id = ah.c_allocationhdr_id --alocacao de pagamentos 
+          				WHERE ah.isactive = 'Y'::bpchar AND (ah.docstatus = ANY (ARRAY['CO'::bpchar, 'CL'::bpchar])) AND ah.dateacct < to_timestamp('2024-12-31'::text, 'YYYY-MM-DD'::text)
+          				GROUP BY al.c_invoice_id, al.c_payment_id, al.c_allocationline_id) invoicepaidtodate 
+          				ON invoicepaidtodate.c_invoice_id = i.c_invoice_id AND invoicepaidtodate.c_payment_id = p.c_payment_id 
+          				AND invoicepaidtodate.c_allocationline_id = h.c_allocationline_id
+  WHERE h.dateacct >= to_timestamp('2024-11-01'::text, 'YYYY-MM-DD'::text) AND h.dateacct <= to_timestamp('2024-11-30'::text, 'YYYY-MM-DD'::text) 
+  		AND h.c_allocationhdr_id IS NOT NULL AND h.c_invoice_id IS NOT NULL AND (p.docstatus = ANY (ARRAY['CO'::bpchar, 'CL'::bpchar])) 
+  		AND p.ad_client_id = 5000017::numeric
+  GROUP BY 'ALOCACAO_FATURA'::text, p.ad_client_id, p.ad_org_id, p.c_bpartner_id, (COALESCE(il.user1_id, i.user1_id, p.user1_id)), 
+ 		(COALESCE(il.user2_id, i.user2_id, p.user2_id)), (COALESCE(il.c_activity_id, i.c_activity_id, p.c_activity_id)), il.c_charge_id, il.m_product_id, 
+ 		(COALESCE(i.cof_c_planofinanceiro_id, p.cof_c_planofinanceiro_id)), p.c_payment_id, i.c_invoice_id, bp.value, bp.name, pf.value, pf.name, (COALESCE(pr.value, c.name)), 
+ 		(COALESCE(pr.name, c.name, c.description)), cc.value, cc.name, cc2.value, cc2.name, a.value, a.name, idt.docbasetype, h.c_allocationline_id, 
+ 		(cof_getreflistvalue('COF_C_PlanoFinanceiro'::character varying, 'AccountType'::character varying, pf.accounttype::character varying)), p.datetrx, h.dateacct, p.isreceipt, p.c_payment_id
+
 
 
 
