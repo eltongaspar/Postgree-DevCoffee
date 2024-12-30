@@ -42,6 +42,7 @@ select cbkl.dateacct as data_pagamento, cbkl.created as data_emissão, ao.ad_org
 	 case when cbkl.trxamt > 0 then 'Entrada'
 	 		when cbkl.trxamt < 0 then 'Saida'
 	 end  as Tipo_Transacao, 
+	 cp.cof_creditdate, --anslise para devoluções de creditos 
 	 cical.invoice_list as invoice_list,cp.docstatus doc_statusd,
 	 cp.user1_id,cp.user2_id,ci.user1_id,ci.user2_id,cil.user1_id,cil.user2_id,
 																	cilcc.cil_cc,calant.cacicil_cc,cdoc.user1_id,cdoc.user2_id,
@@ -61,7 +62,7 @@ select cbkl.dateacct as data_pagamento, cbkl.created as data_emissão, ao.ad_org
 	left join c_elementvalue cc on cc.c_elementvalue_id = coalesce(cp.user1_id,cp.user2_id,ci.user1_id,ci.user2_id,cil.user1_id,cil.user2_id,
 																	cilcc.cil_cc,calant.cacicil_cc,cdoc.user1_id,cdoc.user2_id ,0) --cc
 	where cbkl.ad_client_id = 5000017
-	and cbkl.c_bpartner_id  = 5092534
+	--and cbkl.c_bpartner_id  = 5092534
 	--and cbkl.trxamt < 0
 	--and cbkl.ad_org_id  = 5000047 -- codigo empresa
 	--and cbk.c_bankaccount_id In (5000219,5000392) -- bancos 5000392
@@ -126,6 +127,8 @@ from c_bankstatementline cbkl
 	and cbkl.dateacct between '2024-11-01' and '2024-11-30';
 
 
+select cp.cof_creditdate ,* from c_payment cp 
+where cp.cof_creditdate is not null;
 
 
 
