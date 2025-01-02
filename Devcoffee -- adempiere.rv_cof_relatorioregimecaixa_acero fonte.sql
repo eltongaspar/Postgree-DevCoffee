@@ -43,7 +43,7 @@ SELECT 'PAGAMENTO_DIRETO_COM_FINALIDADE'::text AS tipo,
      LEFT JOIN cof_c_planofinanceiro pf ON pf.cof_c_planofinanceiro_id = p.cof_c_planofinanceiro_id --planos financeiros 
   WHERE p.c_charge_id > 0::numeric 
   		AND (p.docstatus = ANY (ARRAY['CO'::bpchar, 'CL'::bpchar])) 
-  		AND p.datetrx >= to_timestamp('2024-01-01'::text, 'YYYY-MM-DD'::text) AND p.datetrx <= to_timestamp('2030-12-31'::text, 'YYYY-MM-DD'::text) 
+  		AND p.datetrx >= to_timestamp('2024-01-01'::text, 'YYYY-MM-DD'::text) AND p.datetrx <= to_timestamp('2025-12-31'::text, 'YYYY-MM-DD'::text) 
   		AND p.ad_client_id = 5000017::numeric
   GROUP BY 'PAGAMENTO_DIRETO_COM_FINALIDADE'::text, p.ad_client_id, p.ad_org_id, p.c_bpartner_id, p.user1_id, p.user2_id, p.c_activity_id, p.c_charge_id, 
   			0::integer, p.cof_c_planofinanceiro_id, bp.value, bp.name, pf.value, pf.name, c.name, c.name, cc.value, cc.name, cc2.value, cc2.name, a.value, 
@@ -92,7 +92,7 @@ UNION ALL
      LEFT JOIN cof_c_planofinanceiro pf ON pf.cof_c_planofinanceiro_id = p.cof_c_planofinanceiro_id --plano financeiro 
   WHERE alp.c_payment_id IS NOT NULL AND alp.c_invoice_id IS NULL AND alp.c_order_id IS NULL AND alc.c_allocationline_id IS NOT NULL 
   		AND (h.docstatus = ANY (ARRAY['CO'::bpchar, 'CL'::bpchar])) 
-  		AND h.dateacct >= to_timestamp('2024-01-01'::text, 'YYYY-MM-DD'::text) AND h.dateacct <= to_timestamp('2030-12-31'::text, 'YYYY-MM-DD'::text) 
+  		AND h.dateacct >= to_timestamp('2024-01-01'::text, 'YYYY-MM-DD'::text) AND h.dateacct <= to_timestamp('2025-12-31'::text, 'YYYY-MM-DD'::text) 
   		AND p.ad_client_id = 5000017::numeric
   GROUP BY 'ALOCACAO_CONTRA_FINALIDADE'::text, p.ad_client_id, p.ad_org_id, p.c_bpartner_id, p.user1_id, p.user2_id, p.c_activity_id, p.c_charge_id, 
  		0::integer, p.cof_c_planofinanceiro_id, bp.value, bp.name, pf.value, pf.name, c.name, c.name, cc.value, cc.name, cc2.value, cc2.name, a.value, 
@@ -136,7 +136,7 @@ UNION ALL
      LEFT JOIN rv_allocation h --visao alocamentos financeiros 
      		ON h.c_payment_id = p.c_payment_id 
      		AND h.datetrx >= to_timestamp('2024-01-01'::text, 'YYYY-MM-DD'::text) 
-     		AND h.datetrx <= to_timestamp('2030-12-31'::text, 'YYYY-MM-DD'::text) 
+     		AND h.datetrx <= to_timestamp('2025-12-31'::text, 'YYYY-MM-DD'::text) 
      		AND (h.docstatus = ANY (ARRAY['CO'::bpchar, 'CL'::bpchar]))
      LEFT JOIN c_invoice i ON h.c_invoice_id = i.c_invoice_id --faturas
      LEFT JOIN c_invoiceline il ON il.c_invoice_id = i.c_invoice_id AND il.isdescription = 'N'::bpchar --faturas linhas 
@@ -154,11 +154,11 @@ UNION ALL
             						NULL::numeric, al.ad_client_id, al.ad_org_id)) AS valor_alocado
            				FROM c_allocationline al --alocacao de pagamentos linhas 
             	 			JOIN c_allocationhdr ah ON al.c_allocationhdr_id = ah.c_allocationhdr_id --alocacao de pagamentos 
-          				WHERE ah.isactive = 'Y'::bpchar AND (ah.docstatus = ANY (ARRAY['CO'::bpchar, 'CL'::bpchar])) AND ah.dateacct < to_timestamp('2030-12-31'::text, 'YYYY-MM-DD'::text)
+          				WHERE ah.isactive = 'Y'::bpchar AND (ah.docstatus = ANY (ARRAY['CO'::bpchar, 'CL'::bpchar])) AND ah.dateacct < to_timestamp('2025-12-31'::text, 'YYYY-MM-DD'::text)
           				GROUP BY al.c_invoice_id, al.c_payment_id, al.c_allocationline_id) invoicepaidtodate 
           				ON invoicepaidtodate.c_invoice_id = i.c_invoice_id AND invoicepaidtodate.c_payment_id = p.c_payment_id 
           				AND invoicepaidtodate.c_allocationline_id = h.c_allocationline_id
-  WHERE h.dateacct >= to_timestamp('2024-01-01'::text, 'YYYY-MM-DD'::text) AND h.dateacct <= to_timestamp('2030-12-31'::text, 'YYYY-MM-DD'::text) 
+  WHERE h.dateacct >= to_timestamp('2024-01-01'::text, 'YYYY-MM-DD'::text) AND h.dateacct <= to_timestamp('2025-12-31'::text, 'YYYY-MM-DD'::text) 
   		AND h.c_allocationhdr_id IS NOT NULL AND h.c_invoice_id IS NOT NULL AND (p.docstatus = ANY (ARRAY['CO'::bpchar, 'CL'::bpchar])) 
   		AND p.ad_client_id = 5000017::numeric
   GROUP BY 'ALOCACAO_FATURA'::text, p.ad_client_id, p.ad_org_id, p.c_bpartner_id, (COALESCE(il.user1_id, i.user1_id, p.user1_id)), 
@@ -211,9 +211,9 @@ UNION all
            FROM c_allocationline al --alocação de pagamentos linhas
              JOIN c_allocationhdr ah ON al.c_allocationhdr_id = ah.c_allocationhdr_id --alocação de pagamentos cab.
           WHERE ah.isactive = 'Y'::bpchar AND (ah.docstatus = ANY (ARRAY['CO'::bpchar, 'CL'::bpchar])) 
-          AND ah.dateacct between to_timestamp('2024-01-01'::text, 'YYYY-MM-DD'::text) and to_timestamp('2030-12-31'::text, 'YYYY-MM-DD'::text)
+          AND ah.dateacct between to_timestamp('2024-01-01'::text, 'YYYY-MM-DD'::text) and to_timestamp('2025-12-31'::text, 'YYYY-MM-DD'::text)
           GROUP BY al.c_payment_id) paymnentopentodate ON paymnentopentodate.c_payment_id = p.c_payment_id
-  WHERE p.datetrx >= to_timestamp('2024-01-01'::text, 'YYYY-MM-DD'::text) AND p.datetrx <= to_timestamp('2030-12-31'::text, 'YYYY-MM-DD'::text) 
+  WHERE p.datetrx >= to_timestamp('2024-01-01'::text, 'YYYY-MM-DD'::text) AND p.datetrx <= to_timestamp('2025-12-31'::text, 'YYYY-MM-DD'::text) 
   		AND (abs(p.payamt) - abs(COALESCE(paymnentopentodate.valor_aberto, 0::numeric))) <> 0::numeric AND p.c_charge_id IS NULL 
   		AND (p.docstatus = ANY (ARRAY['CO'::bpchar, 'CL'::bpchar])) AND p.ad_client_id = 5000017::numeric
   GROUP BY 'ANTECIPACAO'::text, p.ad_client_id, p.ad_org_id, p.c_bpartner_id, p.user1_id, p.user2_id, p.c_activity_id, p.c_charge_id, 0::integer, p.cof_c_planofinanceiro_id, 
