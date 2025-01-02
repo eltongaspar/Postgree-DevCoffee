@@ -37,7 +37,7 @@ where ci.dateacct between '2024-11-01' and '2024-11-30'
 	and ci.c_bpartner_id = 5092534;
 
 -- Pagamentos 
-select cp.c_invoice_id , cp.c_payment_id ,cp.user1_id , cp.user2_id , cp.datetrx,cp.payamt,cp.isreceipt, cp.cof_processing3, cp.c_charge_id ,
+select cp.c_invoice_id , cp.c_payment_id ,cp.user1_id , cp.user2_id , cp.datetrx,cp.payamt,cp.isreceipt, cp.cof_processing3, cp.c_charge_id ,cp.c_invoicepayschedule_id ,
 * from c_payment cp
 where cp.datetrx  between '2024-11-01' and '2024-11-30'
 	and cp.c_bpartner_id = 5092534;
@@ -68,10 +68,10 @@ where cbk.dateacct between '2024-11-01' and '2024-11-30'
  	and cbk.c_bankstatement_id  in (5024941);
 
 -- agendamentos de pagamentos 
-select * from c_invoicepayschedule cips
-	left join c_payment cp on cp.c_payment_id = cips.c_payschedule_id 
-where cips.duedate between '2024-11-01' and '2024-11-30'
-	and cp.c_bpartner_id = 5025659 ;
+select cips.c_payment_id,* from c_invoicepayschedule cips
+where cips.duedate between '2024-11-01' and '2025-11-30'
+order by cips.c_invoice_id;
+	--and cips.c_payment_id not in (null,0);
 
 --Extrato linhas com inner joins para rastreamento de pagamentos antecipados 
  select ci.user1_id ,ci.user2_id ,
