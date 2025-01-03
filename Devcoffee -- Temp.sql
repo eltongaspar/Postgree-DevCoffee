@@ -18,33 +18,34 @@ where cc.value in ('0301','999991','999999')
 
 --Parceiros 
 select * from c_bpartner cbp
-where  cbp."name" like ('%CLAUDIO FARIA DOS REIS%');
+where  cbp."name" like ('%ERMELINDA%');
 
 -- Faturas
 select ci.c_payment_id , ci.user1_id , ci.user2_id , ci.grandtotal ,
 * from c_invoice ci
 where ci.dateacct  between '2024-11-01' and '2024-11-30'
-	and ci.c_bpartner_id  = 5125433;
+	and ci.c_bpartner_id  = 5142112;
 -- c_payment_id nulo
+
 
 -- Faturas linhas 
 select cil.user1_id ,cil.user2_id, cil.linenetamt ,totallines,
 * from c_invoiceline cil
 	left join c_invoice ci on ci.c_invoice_id =cil.c_invoice_id 
 where ci.dateacct between '2024-11-01' and '2024-11-30'
-	and ci.c_bpartner_id = 5125433;
+	and ci.c_bpartner_id = 5145219;
 
 -- Pagamentos 
 select cp.c_invoice_id , cp.c_payment_id ,cp.user1_id , cp.user2_id , cp.datetrx,cp.payamt,cp.isreceipt, cp.cof_processing3, cp.c_charge_id ,cp.c_invoicepayschedule_id ,
 * from c_payment cp
 where cp.datetrx  between '2024-11-01' and '2024-11-30'
-	and cp.c_bpartner_id = 5125433;
+	and cp.c_bpartner_id = 5145219;
 
 --Alocação de pagamentos linhas
  select  * from c_allocationline cal
  	left join c_allocationhdr ca on cal.c_allocationhdr_id = ca.c_allocationhdr_id 
-where ca.datetrx between '2024-11-01' and '2024-11-30'
-	and cal.c_bpartner_id = 5092534 and cal.c_payment_id = 5125433;
+where ca.datetrx between '2024-01-01' and '2024-11-30'
+	and cal.c_bpartner_id = 5145219;
 
 
 --Alocação de pagamentos 
@@ -56,14 +57,13 @@ select cbkl.ad_org_id ,cbkl.c_payment_id ,cbkl.c_invoice_id ,cbkl.trxamt,
 * from c_bankstatementline cbkl
 where cbkl.dateacct between '2024-11-01' and '2024-11-30'
 	and cbkl.isactive  = 'Y' --registro ativo
-	and cbkl.c_bpartner_id  = 5125433;
+	and cbkl.c_bpartner_id  = 5142112;
  
  -- Extrato 
 select * from c_bankstatement cbk
 	left join c_bankstatementline cbkl on cbkl.c_bankstatement_id = cbk.c_bankstatement_id 
 where cbk.dateacct between '2024-11-01' and '2024-11-30'
-	and cbkl.c_bpartner_id = 5146128
- 	and cbk.c_bankstatement_id  in (5024941);
+	and cbkl.c_bpartner_id = 5146128;
 
 -- agendamentos de pagamentos 
 select cips.c_payment_id,* from c_invoicepayschedule cips
