@@ -24,7 +24,7 @@ where  cbp."name" like ('%ERMELINDA%');
 select ci.c_payment_id , ci.user1_id , ci.user2_id , ci.grandtotal, ci.dateinvoiced,
 * from c_invoice ci
 where ci.dateacct  between '2024-11-01' and '2024-11-30'
-	and ci.c_bpartner_id  = 5142112;
+	and ci.c_bpartner_id  = 5142112 or ci.c_invoice_id = 5306112;
 -- c_payment_id nulo
 
 
@@ -39,7 +39,7 @@ where ci.dateacct between '2024-11-01' and '2024-11-30'
 select cp.c_invoice_id , cp.c_payment_id ,cp.user1_id , cp.user2_id , cp.datetrx,cp.payamt,cp.isreceipt, cp.cof_processing3, cp.c_charge_id ,cp.c_invoicepayschedule_id ,
 * from c_payment cp
 where cp.datetrx  between '2024-11-01' and '2024-11-30'
-	and cp.c_bpartner_id = 5142112;
+	and cp.c_bpartner_id = 5142112 or cp.c_invoice_id = 5306112;
 
 --Alocação de pagamentos linhas
  select  ca.c_allocationhdr_id,cal.c_payment_id,cal.c_invoice_id,cal.c_invoice_id,cal.c_invoicepayschedule_id,cal.amount,
@@ -105,7 +105,16 @@ SELECT al.c_payment_id,
           AND ah.dateacct between to_timestamp('2024-11-01'::text, 'YYYY-MM-DD'::text) and to_timestamp('2024-11-30'::text, 'YYYY-MM-DD'::text)
           GROUP BY al.c_payment_id;
 
-
+--analise 
+select cbkl.c_payment_id,ci.c_invoice_id,ci.dateinvoiced,cips.duedate,cal.amount,ci.grandtotal,cbkl.trxamt,cp.payamt,
+						ROW_NUMBER() OVER (PARTITION BY cbkl.c_payment_id ORDER BY cbkl.c_payment_id) AS row_number --rank e rotulos dos dados para pegar o primeiro registro na posição
+  					from c_bankstatementline cbkl
+  						left join c_allocationline cal on cal.c_payment_id  = cbkl.c_payment_id --alicação de pagamentos linhas
+  						left join c_invoice ci on cal.c_invoice_id = ci.c_invoice_id --faturas
+  						left join c_invoicepayschedule cips on cips.c_invoice_id = ci.c_invoice_id
+  						left join c_invoiceline cil on cil.c_invoice_id = ci.c_invoice_id --faturas linhas
+  						left join c_payment cp on cal.c_payment_id = cbkl.c_payment_id 
+  					group by cbkl.c_payment_id,ci.c_invoice_id,ci.dateinvoiced,cips.duedate,cal.amount,cbkl.trxamt,cp.payamt;
 
 
 
