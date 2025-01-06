@@ -21,8 +21,16 @@ with
 				FROM c_bankstatementline cbkl --extrato bancario linhas 
 						left join c_allocationline cal on cal.c_payment_id = cbkl.c_payment_id --alocação de pagamentos 
 						left join c_invoice ci on cal.c_invoice_id = ci.c_invoice_id --faturas
-				group by cal.c_payment_id) --essa subquery retorna a lista das faturas que foram pagas com o crédito antecipado em forma de linha para não somar os itens repetidos
-select cbkl.dateacct as data_pagamento,ci.created as data_emissão,cips.duedate as data_vencimento, --datas 
+				group by cal.c_payment_id), --essa subquery retorna a lista das faturas que foram pagas com o crédito antecipado em forma de linha para não somar os itens repetidos
+	cidate_temp as (select cbkl.c_payment_id,ci.c_invoice_id,ci.dateinvoiced,cips.duedate,
+						ROW_NUMBER() OVER (PARTITION BY cbkl.c_payment_id ORDER BY cbkl.c_payment_id) AS row_number --rank e rotulos dos dados para pegar o primeiro registro na posição
+  					from c_bankstatementline cbkl
+  						left join c_allocationline cal on cal.c_payment_id  = cbkl.c_payment_id --alicação de pagamentos linhas
+  						left join c_invoice ci on cal.c_invoice_id = ci.c_invoice_id --faturas
+  						left join c_invoicepayschedule cips on cips.c_invoice_id = ci.c_invoice_id
+  						left join c_invoiceline cil on cil.c_invoice_id = ci.c_invoice_id --faturas linhas
+  					group by cbkl.c_payment_id,ci.c_invoice_id,ci.dateinvoiced,cips.duedate) --essa subquery analisa as alocações de pagamentos adiantados e retorna as datas das fatuuras 
+select cbkl.dateacct as data_pagamento,coalesce(ci.dateinvoiced,cidate.dateinvoiced) as data_emissao,coalesce(cips.duedate,cidate.duedate) as data_vencimento, --datas 
 		ao.ad_org_id as organizacao_cod, ao."name" as organizacao_nome, cba.c_bankaccount_id as banco_id , cba."name" as banco_nome, 
 		cb.c_bpartner_id  as pareceiro_id,cb."name" as parceiro_nome,
 		case when (cc.c_elementvalue_id is null and cp.reversal_id is not null) or (cp.docstatus = 'RE') or (cbk.docstatus  = 'RE') or (cp.docstatus = 'RE')
@@ -70,12 +78,13 @@ from c_bankstatementline cbkl
 	left join c_invoiceline cil on cil.c_invoiceline_id = ci.c_invoice_id --faturas linhas
 	left join c_invoicepayschedule cips on cips.c_invoicepayschedule_id = cp.c_invoicepayschedule_id --agendamentos de pagamentos 
 	left join cil_temp cilcc on cil.c_invoice_id = ci.c_invoice_id --Itens da Faturaem cte
-	left join cal_temp calant on calant.c_payment_id = cbkl.c_payment_id and row_number = 1 -- alocação de pagamentos cte
+	left join cal_temp calant on calant.c_payment_id = cbkl.c_payment_id and calant.row_number = 1 -- alocação de pagamentos cte
+	left join cidate_temp cidate on cidate.c_payment_id = cbkl.c_payment_id and cidate.row_number = 1 -- alocação de pagamentos e datas 
 	left join ci_temp cical on cical.c_payment_id = cbkl.c_payment_id -- Faturas pagas com credito antecipados cte 
 	left join c_elementvalue cc on cc.c_elementvalue_id = coalesce(cp.user1_id,cp.user2_id,ci.user1_id,ci.user2_id,cil.user1_id,cil.user2_id,
 																		cilcc.cil_cc,calant.cacicil_cc,cdoc.user1_id,cdoc.user2_id ,0) --cc valida valores de varios campos de varias tabelas
 	where cbkl.ad_client_id = 5000017 --cliente 
-	and cbkl.c_bpartner_id  In (5154338,5142112) --prceiros 
+	--and cbkl.c_bpartner_id  In (5142112) --parceiros 
 	and cbkl.isactive  = 'Y' --registro ativo
 	and cbk.docstatus in ('CO','CL') --status completo 
 	--and cbkl.dateacct between current_date - interval '5 years' AND current_date
