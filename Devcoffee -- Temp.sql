@@ -114,6 +114,8 @@ select cbkl.c_payment_id,ci.c_invoice_id,ci.dateinvoiced,cips.duedate,cal.amount
   						left join c_invoicepayschedule cips on cips.c_invoice_id = ci.c_invoice_id
   						left join c_invoiceline cil on cil.c_invoice_id = ci.c_invoice_id --faturas linhas
   						left join c_payment cp on cp.c_payment_id = cal.c_payment_id 
+  					where (cp.reversal_id is null) or (cp.docstatus not in ('RE')) or (cbk.docstatus not in ('RE')) or (cp.docstatus not in ('RE'))
+								or (cbkl.description not like ('%^%') or cbkl.description not like ('%<%') or cbkl.description not like ('%>%')) 
   					group by cbkl.c_payment_id,ci.c_invoice_id,ci.dateinvoiced,cips.duedate,cal.amount,cbkl.trxamt,cp.payamt;
 
 
