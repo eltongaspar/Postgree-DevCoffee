@@ -67,8 +67,11 @@ where cbk.dateacct between '2024-11-01' and '2024-11-30'
 	and cbkl.c_bpartner_id = 5146128;
 
 -- agendamentos de pagamentos 
-select cips.c_payment_id,* from c_invoicepayschedule cips
-where cips.duedate between '2024-11-01' and '2025-11-30'
+select cips.c_payment_id, ci.c_invoice_id,
+* from c_invoicepayschedule cips
+	left join c_invoice ci on cips.c_invoice_id = ci.c_invoice_id
+where cips.duedate between '2024-11-01' and '2024-11-30'
+	and ci.c_bpartner_id = 5142112
 order by cips.c_invoice_id;
 	--and cips.c_payment_id not in (null,0);
 
