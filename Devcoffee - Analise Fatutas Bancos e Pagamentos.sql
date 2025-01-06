@@ -60,24 +60,24 @@ select cbkl.dateacct as data_pagamento,ci.created as data_emissão,cips.duedate 
 																--	cilcc.cil_cc,calant.cacicil_cc,cdoc.user1_id,cdoc.user2_id
 from c_bankstatementline cbkl
 	left join c_payment cp on cp.c_payment_id  = cbkl.c_payment_id --pagamentos
-	left join c_allocationline cal on cal.c_payment_id = cbkl.c_bankstatementline_id 
-	left join c_doctype cdoc on cdoc.c_doctype_id  = cp.c_doctype_id --tipod de documentos
+	left join c_allocationline cal on cal.c_payment_id = cbkl.c_bankstatementline_id --alocação de pagamentos
+	left join c_doctype cdoc on cdoc.c_doctype_id  = cp.c_doctype_id --tipos de documentos
 	left join c_bankstatement cbk on cbk.c_bankstatement_id = cbkl.c_bankstatement_id --extrato bancario 
-	left join c_bankaccount cba on cba.c_bankaccount_id = cbk.c_bankaccount_id 
+	left join c_bankaccount cba on cba.c_bankaccount_id = cbk.c_bankaccount_id --contas bancarias
 	left join ad_org ao on ao.ad_org_id  = cbkl.ad_org_id -- empresas 
 	left join c_bpartner cb on cb.c_bpartner_id = cbkl.c_bpartner_id --parceiros
 	left join c_invoice ci on cp.c_invoice_id = ci.c_invoice_id --faturas
-	left join c_invoiceline cil on cil.c_invoiceline_id = ci.c_invoice_id
-	left join c_invoicepayschedule cips on cips.c_invoicepayschedule_id = cp.c_invoicepayschedule_id 
-	left join cil_temp cilcc on cil.c_invoice_id = ci.c_invoice_id --Itens da Fatura
-	left join cal_temp calant on calant.c_payment_id = cbkl.c_payment_id and row_number = 1 -- alocação de pagamentos 
-	left join ci_temp cical on cical.c_payment_id = cbkl.c_payment_id -- Faturas pagas com credito antecioado
+	left join c_invoiceline cil on cil.c_invoiceline_id = ci.c_invoice_id --faturas linhas
+	left join c_invoicepayschedule cips on cips.c_invoicepayschedule_id = cp.c_invoicepayschedule_id --agendamentos de pagamentos 
+	left join cil_temp cilcc on cil.c_invoice_id = ci.c_invoice_id --Itens da Faturaem cte
+	left join cal_temp calant on calant.c_payment_id = cbkl.c_payment_id and row_number = 1 -- alocação de pagamentos cte
+	left join ci_temp cical on cical.c_payment_id = cbkl.c_payment_id -- Faturas pagas com credito antecipados cte 
 	left join c_elementvalue cc on cc.c_elementvalue_id = coalesce(cp.user1_id,cp.user2_id,ci.user1_id,ci.user2_id,cil.user1_id,cil.user2_id,
-																		cilcc.cil_cc,calant.cacicil_cc,cdoc.user1_id,cdoc.user2_id ,0) --cc
-	where cbkl.ad_client_id = 5000017
-	and cbkl.c_bpartner_id  In (5154338,5142112)
+																		cilcc.cil_cc,calant.cacicil_cc,cdoc.user1_id,cdoc.user2_id ,0) --cc valida valores de varios campos de varias tabelas
+	where cbkl.ad_client_id = 5000017 --cliente 
+	and cbkl.c_bpartner_id  In (5154338,5142112) --prceiros 
 	and cbkl.isactive  = 'Y' --registro ativo
-	and cbk.docstatus in ('CO','CL')
+	and cbk.docstatus in ('CO','CL') --status completo 
 	--and cbkl.dateacct between current_date - interval '5 years' AND current_date
 	and cbkl.dateacct  between '2024-11-01' and '2024-11-30';
 	order by cba.c_bankaccount_id,cbkl.c_bankstatementline_id ;
