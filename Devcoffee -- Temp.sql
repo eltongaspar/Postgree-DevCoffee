@@ -113,7 +113,7 @@ select cbkl.c_payment_id,ci.c_invoice_id,ci.dateinvoiced,cips.duedate,cal.amount
   						left join c_invoice ci on cal.c_invoice_id = ci.c_invoice_id --faturas
   						left join c_invoicepayschedule cips on cips.c_invoice_id = ci.c_invoice_id
   						left join c_invoiceline cil on cil.c_invoice_id = ci.c_invoice_id --faturas linhas
-  						left join c_payment cp on cal.c_payment_id = cbkl.c_payment_id 
+  						left join c_payment cp on cp.c_payment_id = cal.c_payment_id 
   					group by cbkl.c_payment_id,ci.c_invoice_id,ci.dateinvoiced,cips.duedate,cal.amount,cbkl.trxamt,cp.payamt;
 
 
