@@ -169,7 +169,7 @@ from c_invoice ci -- Fatura
 	left join c_invoicepayschedule cis on cis.c_invoice_id = ci.c_invoice_id --Agendamento da fatura 
  	left join m_product mp on mp.m_product_id = cil.m_product_id --Produtos 
  	left join m_product_category mpc on mp.m_product_category_id = mpc.m_product_category_id --Categorias de produtos
-	left join c_uom cuom on cuom.c_uom_id = mp.c_uom_id
+	left join c_uom cuom on cuom.c_uom_id = mp.c_uom_id --unidades de madidas
 	left join nf_itens_temp nf_itens on nf_itens.c_invoice_id = ci.c_invoice_id -- aqui ligo as tabelas temporarias no inicio with de sub consultas para ligar as principais 
 	left join agend_pag_temp agend_pag on agend_pag.c_invoice_id = ci.c_invoice_id
 where ci.ad_client_id = 5000017
