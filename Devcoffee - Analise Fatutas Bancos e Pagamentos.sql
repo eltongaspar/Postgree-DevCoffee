@@ -29,7 +29,7 @@ with
   						left join c_invoice ci on cal.c_invoice_id = ci.c_invoice_id --faturas
   						left join c_invoicepayschedule cips on cips.c_invoice_id = ci.c_invoice_id
   						left join c_invoiceline cil on cil.c_invoice_id = ci.c_invoice_id --faturas linhas
-  					group by cbkl.c_payment_id,ci.c_invoice_id,ci.dateinvoiced,cips.duedate) --essa subquery analisa as alocações de pagamentos adiantados e retorna as datas das fatuuras 
+  					group by cbkl.c_payment_id,ci.c_invoice_id,ci.dateinvoiced,cips.duedate) --essa subquery analisa as alocações de pagamentos adiantados e retorna as datas das faturas 
 select cbkl.dateacct as data_pagamento,coalesce(ci.dateinvoiced,cidate.dateinvoiced) as data_emissao,coalesce(cips.duedate,cidate.duedate) as data_vencimento, --datas 
 		ao.ad_org_id as organizacao_cod, ao."name" as organizacao_nome, cba.c_bankaccount_id as banco_id , cba."name" as banco_nome, 
 		cb.c_bpartner_id  as pareceiro_id,cb."name" as parceiro_nome,
@@ -63,7 +63,7 @@ select cbkl.dateacct as data_pagamento,coalesce(ci.dateinvoiced,cidate.dateinvoi
 	 		when cbkl.trxamt < 0 then 'Saida'
 	 end  as Tipo_Transacao,
 	 --cp.cof_creditdate, --anslise para devoluções de creditos 
-	 cical.invoice_list as invoice_list,cp.docstatus doc_status,*
+	 cical.invoice_list as invoice_list,cp.docstatus doc_status
 	 --cp.user1_id,cp.user2_id,ci.user1_id,ci.user2_id,cil.user1_id,cil.user2_id, --validação de centro de custos - usado para analises 
 																--	cilcc.cil_cc,calant.cacicil_cc,cdoc.user1_id,cdoc.user2_id
 from c_bankstatementline cbkl
