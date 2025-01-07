@@ -52,7 +52,8 @@ select cbkl.dateacct as data_pagamento,coalesce(ci.dateinvoiced,cidate.dateinvoi
 										and cc.c_elementvalue_id in (5041450) and cical.invoice_list is null)						
 					or (((cc.c_elementvalue_id is null and cp.reversal_id is null) or (cp.docstatus not in ('RE')) or (cbk.docstatus not in ('RE')) or (cp.docstatus not in ('RE'))
 								or (cbkl.description not like ('%^%') or cbkl.description not like ('%<%') or cbkl.description not like ('%>%'))) 
-										and cdoc.c_doctype_id in (5002293) and cical.invoice_list is null)					
+										and cdoc.c_doctype_id in (5002293) and cical.invoice_list is null)
+					and cbkl.description is null
 			then 'Analisar' 
 			else 'OK'
 		end as Valid_Antecipacao,--validação de pagamentos e recebimentos antecipados
@@ -63,7 +64,7 @@ select cbkl.dateacct as data_pagamento,coalesce(ci.dateinvoiced,cidate.dateinvoi
 	 		when cbkl.trxamt < 0 then 'Saida'
 	 end  as Tipo_Transacao,
 	 --cp.cof_creditdate, --anslise para devoluções de creditos 
-	 cical.invoice_list as invoice_list,cp.docstatus doc_status,*
+	 cical.invoice_list as invoice_list,cp.docstatus doc_status
 	 --cp.user1_id,cp.user2_id,ci.user1_id,ci.user2_id,cil.user1_id,cil.user2_id, --validação de centro de custos - usado para analises 
 																--	cilcc.cil_cc,calant.cacicil_cc,cdoc.user1_id,cdoc.user2_id
 from c_bankstatementline cbkl
@@ -84,7 +85,7 @@ from c_bankstatementline cbkl
 	left join c_elementvalue cc on cc.c_elementvalue_id = coalesce(cp.user1_id,cp.user2_id,ci.user1_id,ci.user2_id,cil.user1_id,cil.user2_id,
 																		cilcc.cil_cc,calant.cacicil_cc,cdoc.user1_id,cdoc.user2_id ,0) --cc valida valores de varios campos de varias tabelas
 	where cbkl.ad_client_id = 5000017 --cliente 
-	and cbkl.c_bpartner_id  In (5092534) --parceiros 
+	--and cbkl.c_bpartner_id  In (5125433,5154905,5092534) --parceiros 
 	and cbkl.isactive  = 'Y' --registro ativo
 	and cbk.docstatus in ('CO','CL') --status completo 
 	--and cp.isreceipt = 'Y'
