@@ -63,7 +63,7 @@ select cbkl.dateacct as data_pagamento,coalesce(ci.dateinvoiced,cidate.dateinvoi
 	 		when cbkl.trxamt < 0 then 'Saida'
 	 end  as Tipo_Transacao,
 	 --cp.cof_creditdate, --anslise para devoluções de creditos 
-	 cical.invoice_list as invoice_list,cp.docstatus doc_status
+	 cical.invoice_list as invoice_list,cp.docstatus doc_status,*
 	 --cp.user1_id,cp.user2_id,ci.user1_id,ci.user2_id,cil.user1_id,cil.user2_id, --validação de centro de custos - usado para analises 
 																--	cilcc.cil_cc,calant.cacicil_cc,cdoc.user1_id,cdoc.user2_id
 from c_bankstatementline cbkl
@@ -84,9 +84,10 @@ from c_bankstatementline cbkl
 	left join c_elementvalue cc on cc.c_elementvalue_id = coalesce(cp.user1_id,cp.user2_id,ci.user1_id,ci.user2_id,cil.user1_id,cil.user2_id,
 																		cilcc.cil_cc,calant.cacicil_cc,cdoc.user1_id,cdoc.user2_id ,0) --cc valida valores de varios campos de varias tabelas
 	where cbkl.ad_client_id = 5000017 --cliente 
-	--and cbkl.c_bpartner_id  In (5142112) --parceiros 
+	and cbkl.c_bpartner_id  In (5092534) --parceiros 
 	and cbkl.isactive  = 'Y' --registro ativo
 	and cbk.docstatus in ('CO','CL') --status completo 
+	--and cp.isreceipt = 'Y'
 	--and cbkl.dateacct between current_date - interval '5 years' AND current_date
 	and cbkl.dateacct  between '2024-11-01' and '2024-11-30'
 order by cba.c_bankaccount_id,cbkl.c_bankstatementline_id ;
