@@ -103,7 +103,7 @@ select mi.m_inout_id ,mi.c_order_id ,mil.movementqty ,mil.qtyentered ,
 where mi.issotrx = 'N' and mi.docstatus  = 'CO' and mi.isactive  = 'Y'
 and mi.ad_client_id = 5000017;
 
--- ecebimento de materiais e expedição linhas - Soma dos itens 
+-- recebimento de materiais e expedição linhas - Soma dos itens 
 -- join m_inout mi e m_inoutline mil
 select mil.m_product_id ,sum(mil.movementqty) as qtde_nov ,sum(mil.qtyentered) as qtde_entrada
 from m_inout mi

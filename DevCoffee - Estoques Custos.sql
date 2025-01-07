@@ -397,6 +397,3 @@ group by ms.m_product_id, mc.currentcostprice, mc.currentcostprice, mp."name",mc
 having ((mc.currentqty)*(mc.currentcostprice)) - (sum(ms.qtyonhand)*(mc.currentcostprice)) <> 0
 order by ms.m_product_id;
 
-
-
-

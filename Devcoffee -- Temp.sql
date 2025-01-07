@@ -18,13 +18,13 @@ where cc.value in ('0301','999991','999999')
 
 --Parceiros 
 select * from c_bpartner cbp
-where  cbp."name" like ('%CONRADO METIDIERI%');
+where  cbp."name" like ('%GRYPHE%');
 
 -- Faturas
 select ci.c_payment_id , ci.user1_id , ci.user2_id , ci.grandtotal, ci.dateinvoiced,
 * from c_invoice ci
 where ci.dateacct  between '2024-11-01' and '2024-11-30'
-	and ci.c_bpartner_id  = 5151800;
+	and ci.c_bpartner_id  = 5155113;
 -- c_payment_id nulo
 
 
@@ -33,20 +33,20 @@ select cil.user1_id ,cil.user2_id, cil.linenetamt ,totallines,
 * from c_invoiceline cil
 	left join c_invoice ci on ci.c_invoice_id =cil.c_invoice_id 
 where ci.dateacct between '2024-11-01' and '2024-11-30'
-	and ci.c_bpartner_id = 5151800;
+	and ci.c_bpartner_id = 5155113;
 
 -- Pagamentos 
 select cp.c_invoice_id , cp.c_payment_id ,cp.user1_id , cp.user2_id , cp.datetrx,cp.payamt,cp.isreceipt, cp.cof_processing3, cp.c_charge_id ,cp.c_invoicepayschedule_id ,
 * from c_payment cp
 where cp.datetrx  between '2024-11-01' and '2024-11-30'
-	and cp.c_bpartner_id = 5151800;
+	and cp.c_bpartner_id = 5155113;
 
 --Alocação de pagamentos linhas
  select  ca.c_allocationhdr_id,cal.c_payment_id,cal.c_invoice_id,cal.c_invoice_id,cal.c_invoicepayschedule_id,cal.amount,
  * from c_allocationline cal
  	left join c_allocationhdr ca on cal.c_allocationhdr_id = ca.c_allocationhdr_id 
 where ca.datetrx between '2024-11-01' and '2024-11-30'
-	and cal.c_bpartner_id = 5151800;
+	and cal.c_bpartner_id = 5155113;
 
 
 --Alocação de pagamentos 
@@ -58,20 +58,20 @@ select cbkl.ad_org_id ,cbkl.c_payment_id ,cbkl.c_invoice_id ,cbkl.trxamt,
 * from c_bankstatementline cbkl
 where cbkl.dateacct between '2024-11-01' and '2024-11-30'
 	and cbkl.isactive  = 'Y' --registro ativo
-	and cbkl.c_bpartner_id  = 5151800;
+	and cbkl.c_bpartner_id  = 5155113;
  
  -- Extrato 
 select * from c_bankstatement cbk
 	left join c_bankstatementline cbkl on cbkl.c_bankstatement_id = cbk.c_bankstatement_id 
 where cbk.dateacct between '2024-11-01' and '2024-11-30'
-	and cbkl.c_bpartner_id = 5151800;
+	and cbkl.c_bpartner_id = 5155113;
 
 -- agendamentos de pagamentos 
 select cips.c_payment_id, ci.c_invoice_id,
 * from c_invoicepayschedule cips
 	left join c_invoice ci on cips.c_invoice_id = ci.c_invoice_id
 where cips.duedate between '2024-11-01' and '2024-11-30'
-	and ci.c_bpartner_id = 5151800
+	and ci.c_bpartner_id = 5155113
 order by cips.c_invoice_id;
 	--and cips.c_payment_id not in (null,0);
 
@@ -80,7 +80,7 @@ order by cips.c_invoice_id;
  * from c_bankstatementline cbkl
   	left join c_allocationline cal on cal.c_payment_id  = cbkl.c_payment_id 
   	left join c_invoice ci on cal.c_invoice_id = ci.c_invoice_id 
-  where cbkl.c_bpartner_id = 5151800 and cbkl.dateacct between '2024-11-01' and '2024-12-30';
+  where cbkl.c_bpartner_id = 5155113 and cbkl.dateacct between '2024-11-01' and '2024-12-30';
  
 --Extrato linhas com inner joins para rastreamento de pagamentos antecipados 
 select cbkl.c_payment_id, cbkl.c_payment_id ,cp.c_payment_id,ci.c_invoice_id ,ci.user1_id, cp.user1_id,
@@ -89,10 +89,20 @@ from c_bankstatementline cbkl
   	left join c_allocationline cal on cal.c_payment_id  = cbkl.c_payment_id 
   	left join c_invoice ci on cal.c_invoice_id = ci.c_invoice_id 
   	left join c_payment cp on cp.c_payment_id  = cbkl.c_payment_id --cbkl.c_invoice_id 
-where cbkl.c_bpartner_id   in (5151800)
+where cbkl.c_bpartner_id in (5155113)
 group by cbkl.c_payment_id, cbkl.c_payment_id ,cp.c_payment_id,
 		ci.c_invoice_id ,ci.user1_id,cp.c_payment_id;
 
+--movimentações de estoques  
+select * from m_inout mi 
+	left join  m_inoutline mil on mil.m_inout_id = mi.m_inout_id 
+where mi.c_bpartner_id in (5155113);
+
+--movimentações de estoques  linhas
+select * from m_inoutline mil
+where mil.c_bpartner_id in (5155113);
+
+-- View 
 SELECT tipo, ad_client_id, ad_org_id, c_bpartner_id, user1_id, user2_id, c_activity_id, c_charge_id, m_product_id, cof_c_planofinanceiro_id, chave_parceiro, nome_parceiro, tipo_plano_financeiro, chave_plano_financeiro, plano_financeiro, chave_produto_finalidade, produto_finalidade, chave_centro_custo, centro_custo, chave_centro_custo2, centro_custo2, chave_atividade, atividade, valor_pagamento, paydate, cof_allocationdate, isreceipt
 FROM adempiere.rv_cof_relatorioregimecaixa_acero;
 
@@ -117,8 +127,7 @@ select cbkl.c_payment_id,ci.c_invoice_id,ci.dateinvoiced,cips.duedate,cbkl.datea
   						left join c_bankstatement cbk on cbk.c_bankstatement_id = cbkl.c_bankstatement_id --extrato bancario 
   					where ((cp.reversal_id is null) or (cp.docstatus not in ('RE')) or (cbk.docstatus not in ('RE')) or (cp.docstatus not in ('RE'))
 								or (cbkl.description not like ('%^%') or cbkl.description not like ('%<%') or cbkl.description not like ('%>%')))
-						and cbkl.c_bpartner_id in (5151800)
+						and cbkl.c_bpartner_id in (5155113)
   					group by cbkl.c_payment_id,ci.c_invoice_id,ci.dateinvoiced,cips.duedate,cal.amount,cbkl.trxamt,cp.payamt,cbkl.dateacct;
-
 
 
