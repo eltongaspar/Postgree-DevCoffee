@@ -53,7 +53,7 @@ select cbkl.dateacct as data_pagamento,coalesce(ci.dateinvoiced,cidate.dateinvoi
 					or (((cc.c_elementvalue_id is null and cp.reversal_id is null) or (cp.docstatus not in ('RE')) or (cbk.docstatus not in ('RE')) or (cp.docstatus not in ('RE'))
 								or (cbkl.description not like ('%^%') or cbkl.description not like ('%<%') or cbkl.description not like ('%>%'))) 
 										and cdoc.c_doctype_id in (5002293) and cical.invoice_list is null)
-					and cbkl.description is null
+					--and cbkl.description is null
 			then 'Analisar' 
 			else 'OK'
 		end as Valid_Antecipacao,--validação de pagamentos e recebimentos antecipados
