@@ -64,12 +64,12 @@ select cbkl.dateacct as data_pagamento,coalesce(ci.dateinvoiced,cidate.dateinvoi
 	 		when cbkl.trxamt < 0 then 'Saida'
 	 end  as Tipo_Transacao,
 	 --cp.cof_creditdate, --anslise para devoluções de creditos 
-	 cical.invoice_list as invoice_list,cp.docstatus doc_status,
-	 case when ci.docstatus in ('RE')
+	 cical.invoice_list as invoice_list,
+	 cp.docstatus doc_status_pag, cp.docstatus doc_status_fatura,
+	 case when ci.docstatus in ('RE') or cp.docstatus in ('RE')
 	 	then 'Devolução'
 	 	else ''
-	 end as Devolucao,
-	 ci.docstatus,*
+	 end as Devolucao,*
 	 --cp.user1_id,cp.user2_id,ci.user1_id,ci.user2_id,cil.user1_id,cil.user2_id, --validação de centro de custos - usado para analises 
 																--	cilcc.cil_cc,calant.cacicil_cc,cdoc.user1_id,cdoc.user2_id
 from c_bankstatementline cbkl
@@ -90,7 +90,7 @@ from c_bankstatementline cbkl
 	left join c_elementvalue cc on cc.c_elementvalue_id = coalesce(cp.user1_id,cp.user2_id,ci.user1_id,ci.user2_id,cil.user1_id,cil.user2_id,
 																		cilcc.cil_cc,calant.cacicil_cc,cdoc.user1_id,cdoc.user2_id ,0) --cc valida valores de varios campos de varias tabelas
 	where cbkl.ad_client_id = 5000017 --cliente 
-	and cbkl.c_bpartner_id  In (5092534) --parceiros 
+	and cbkl.c_bpartner_id  In (5143868) --parceiros 
 	and cbkl.isactive  = 'Y' --registro ativo
 	and cbk.docstatus in ('CO','CL') --status completo 
 	--and ci.docstatus not in ('RE') --tratatiivas para gerar linhas de devoluções 
