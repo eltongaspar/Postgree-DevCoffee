@@ -177,6 +177,32 @@ Essa query:
 Integra múltiplas tabelas financeiras para criar um relatório robusto de transações e centros de custo.
 Implementa validações para identificar erros e inconsistências em centros de custo e pagamentos antecipados.
 Está otimizada para alimentar sistemas de análise, como o Power BI, com informações detalhadas e bem categorizadas.
+
+
+Descrição Resumida da Query
+Essa consulta SQL é projetada para criar um relatório financeiro detalhado, focando em pagamentos, faturas, centros de custo e devoluções. Ela utiliza subconsultas (CTEs) para organizar e pré-processar dados antes de exibi-los no resultado final. A consulta é útil para análises financeiras e integráveis em ferramentas como Power BI.
+
+Subconsultas (CTEs)
+cil_temp
+
+Extrai os centros de custo (CC) associados às linhas das faturas.
+Utiliza COALESCE para garantir que um centro de custo seja sempre retornado.
+cal_temp
+
+Analisa alocações de pagamentos e identifica os centros de custo ligados a créditos antecipados.
+Usa ROW_NUMBER para priorizar registros.
+ci_temp
+
+Cria uma lista de IDs de faturas pagas em cada pagamento.
+Utiliza STRING_AGG para concatenar os IDs.
+cidate_temp
+
+Retorna as datas de emissão e vencimento das faturas relacionadas a cada pagamento.
+Usa ROW_NUMBER para evitar duplicidades e garantir registros únicos.
+dev_cancel_estorn_temp
+
+Calcula valores de devoluções, estornos e cancelamentos.
+Usa CASE para somar valores apenas quando critérios específicos são atendidos
  #################################################################################################################################*/
 
 
