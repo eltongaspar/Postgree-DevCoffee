@@ -29,7 +29,19 @@ with
   						left join c_invoice ci on cal.c_invoice_id = ci.c_invoice_id --faturas
   						left join c_invoicepayschedule cips on cips.c_invoice_id = ci.c_invoice_id
   						left join c_invoiceline cil on cil.c_invoice_id = ci.c_invoice_id --faturas linhas
-  					group by cbkl.c_payment_id,ci.c_invoice_id,ci.dateinvoiced,cips.duedate) --essa subquery analisa as alocações de pagamentos adiantados e retorna as datas das faturas 
+  					group by cbkl.c_payment_id,ci.c_invoice_id,ci.dateinvoiced,cips.duedate), --essa subquery analisa as alocações de pagamentos adiantados e retorna as datas das faturas
+  	dev_cancel_estorn_temp as (select cp.c_bpartner_id,c_payment_id,
+									sum(case 
+											when cp.isreceipt = 'N' and cp.payamt > 0 
+											then cp.payamt else 0 end) 
+											as Devolucao_Estorno_Cancel
+								from c_payment cp
+									left join c_bpartner cb on cb.c_bpartner_id = cp.c_bpartner_id --parceiros
+								where cp.datetrx  between '2024-11-01' and '2024-11-30'
+								group by cp.c_bpartner_id,cp.c_payment_id
+								having sum(case 
+												when cp.isreceipt = 'N' and cp.payamt > 0 
+												then cp.payamt else 0 end)  > 0) --calcula cancelamentos, devoluções e estornos
 select cbkl.dateacct as data_pagamento,coalesce(ci.dateinvoiced,cidate.dateinvoiced) as data_emissao,coalesce(cips.duedate,cidate.duedate) as data_vencimento, --datas 
 		ao.ad_org_id as organizacao_cod, ao."name" as organizacao_nome, cba.c_bankaccount_id as banco_id , cba."name" as banco_nome, 
 		cb.c_bpartner_id  as pareceiro_id,cb."name" as parceiro_nome,
@@ -69,7 +81,8 @@ select cbkl.dateacct as data_pagamento,coalesce(ci.dateinvoiced,cidate.dateinvoi
 	 case when ci.docstatus in ('RE') or cp.docstatus in ('RE')
 	 	then 'Devolução'
 	 	else ''
-	 end as Devolucao,*
+	 end as Devolucao,
+	 dce.Devolucao_Estorno_Cancel,*
 	 --cp.user1_id,cp.user2_id,ci.user1_id,ci.user2_id,cil.user1_id,cil.user2_id, --validação de centro de custos - usado para analises 
 																--	cilcc.cil_cc,calant.cacicil_cc,cdoc.user1_id,cdoc.user2_id
 from c_bankstatementline cbkl
@@ -89,8 +102,9 @@ from c_bankstatementline cbkl
 	left join ci_temp cical on cical.c_payment_id = cbkl.c_payment_id -- Faturas pagas com credito antecipados cte 
 	left join c_elementvalue cc on cc.c_elementvalue_id = coalesce(cp.user1_id,cp.user2_id,ci.user1_id,ci.user2_id,cil.user1_id,cil.user2_id,
 																		cilcc.cil_cc,calant.cacicil_cc,cdoc.user1_id,cdoc.user2_id ,0) --cc valida valores de varios campos de varias tabelas
+	left join dev_cancel_estorn_temp as dce on dce.c_bpartner_id = cbkl.c_bpartner_id and cbkl.c_payment_id = dce.c_payment_id --valores de cancelamentos,estornos,devoluções
 	where cbkl.ad_client_id = 5000017 --cliente 
-	and cbkl.c_bpartner_id  In (5143868) --parceiros 
+	and cbkl.c_bpartner_id  In (5143868,5125433,5154905,5142112,5154338,5155113,5092534) --parceiros 
 	and cbkl.isactive  = 'Y' --registro ativo
 	and cbk.docstatus in ('CO','CL') --status completo 
 	--and ci.docstatus not in ('RE') --tratatiivas para gerar linhas de devoluções 

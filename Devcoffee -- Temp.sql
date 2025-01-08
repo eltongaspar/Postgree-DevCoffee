@@ -16,9 +16,10 @@ from c_elementvalue cc
 where cc.value in ('0301','999991','999999')
 	or cc.c_elementvalue_id = 5041219 ;
 
+--5125433,5154905,5142112,5154338,5155113,5092534
 --Parceiros 
 select * from c_bpartner cbp
-where  cbp."name" like ('%GABRIEL PROVENZALE%');
+where  cbp."name" like ('%SANDRO DE SOUZA%');
 
 -- Faturas
 select ci.c_payment_id , ci.user1_id , ci.user2_id , ci.grandtotal, ci.dateinvoiced,
@@ -39,7 +40,7 @@ where ci.dateacct between '2024-11-01' and '2024-11-30'
 select cp.c_invoice_id , cp.c_payment_id ,cp.user1_id , cp.user2_id , cp.datetrx,cp.payamt,cp.isreceipt, cp.docstatus , cp.c_charge_id ,cp.c_invoicepayschedule_id ,
 * from c_payment cp
 where cp.datetrx  between '2024-11-01' and '2024-11-30'
-	and cp.c_bpartner_id = 5143868;
+	and cp.c_bpartner_id = 5125433;
 
 --Alocação de pagamentos linhas
  select  ca.c_allocationhdr_id,cal.c_payment_id,cal.c_invoice_id,cal.c_invoice_id,cal.c_invoicepayschedule_id,
@@ -141,3 +142,35 @@ SELECT *
 FROM information_schema.columns 
 WHERE column_name = 'cof_qtdamortizacao';
 
+
+-- Pagamentos Cancelamentos, Estornos e Devoluções 
+select cp.c_bpartner_id, cb.name,
+	sum(case 
+			when cp.isreceipt = 'N' and cp.payamt > 0 
+			then cp.payamt else 0 end) 
+		as Devolucao_Estorno_Cancel
+from c_payment cp
+	left join c_bpartner cb on cb.c_bpartner_id = cp.c_bpartner_id --parceiros
+where cp.datetrx  between '2024-11-01' and '2024-11-30'
+	and cp.c_bpartner_id in  (5125433,5154905,5142112,5154338,5155113,5092534)
+group by cp.c_bpartner_id, cb.name
+having sum(case 
+			when cp.isreceipt = 'N' and cp.payamt > 0 
+			then cp.payamt else 0 end)  > 0;
+
+-- Pagamentos 
+select cp.c_bpartner_id, cb.name,
+    SUM(CASE 
+            WHEN cp.isreceipt = 'N' THEN cp.payamt 
+            ELSE 0 
+        END) AS Devolucao_Estorno_Cancel
+FROM c_payment cp
+	left join c_bpartner cb on cb.c_bpartner_id = cp.c_bpartner_id --parceiros
+WHERE cp.c_bpartner_id IN (
+    SELECT cp.c_bpartner_id 
+    FROM c_payment cp 
+    WHERE isreceipt = 'Y'
+)
+	and cp.c_bpartner_id in  (5125433,5154905,5142112,5154338,5155113,5092534)
+	and cp.docstatus not in ('RE')
+group by cp.c_bpartner_id,cb.name;
