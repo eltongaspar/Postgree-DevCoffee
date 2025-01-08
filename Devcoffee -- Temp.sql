@@ -144,7 +144,7 @@ WHERE column_name = 'cof_qtdamortizacao';
 
 
 -- Pagamentos Cancelamentos, Estornos e Devoluções 
-select cp.c_bpartner_id, cb.name,
+select cp.c_bpartner_id, cb.name,cp.c_payment_id,
 	sum(case 
 			when cp.isreceipt = 'N' and cp.payamt > 0 
 			then cp.payamt else 0 end) 
@@ -152,11 +152,14 @@ select cp.c_bpartner_id, cb.name,
 from c_payment cp
 	left join c_bpartner cb on cb.c_bpartner_id = cp.c_bpartner_id --parceiros
 where cp.datetrx  between '2024-11-01' and '2024-11-30'
-	and cp.c_bpartner_id in  (5125433,5154905,5142112,5154338,5155113,5092534)
-group by cp.c_bpartner_id, cb.name
+	--and cp.c_bpartner_id in  (5125433,5154905,5142112,5154338,5155113,5092534)
+group by cp.c_bpartner_id, cb.name,cp.c_payment_id
 having sum(case 
 			when cp.isreceipt = 'N' and cp.payamt > 0 
-			then cp.payamt else 0 end)  > 0;
+			then cp.payamt else 0 end)  > 0
+		and sum(case 
+			when cp.isreceipt = 'Y' and cp.payamt > 0 
+			then cp.payamt else 0 end)  > 0 ;
 
 -- Pagamentos 
 select cp.c_bpartner_id, cb.name,
@@ -171,6 +174,6 @@ WHERE cp.c_bpartner_id IN (
     FROM c_payment cp 
     WHERE isreceipt = 'Y'
 )
-	and cp.c_bpartner_id in  (5125433,5154905,5142112,5154338,5155113,5092534)
+	--and cp.c_bpartner_id in  (5125433,5154905,5142112,5154338,5155113,5092534)
 	and cp.docstatus not in ('RE')
 group by cp.c_bpartner_id,cb.name;
