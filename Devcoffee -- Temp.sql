@@ -42,7 +42,8 @@ where cp.datetrx  between '2024-11-01' and '2024-11-30'
 	and cp.c_bpartner_id = 5143868;
 
 --Alocação de pagamentos linhas
- select  ca.c_allocationhdr_id,cal.c_payment_id,cal.c_invoice_id,cal.c_invoice_id,cal.c_invoicepayschedule_id,cal.amount,
+ select  ca.c_allocationhdr_id,cal.c_payment_id,cal.c_invoice_id,cal.c_invoice_id,cal.c_invoicepayschedule_id,
+ 	cal.amount,cal.writeoffamt,cal.discountamt,
  * from c_allocationline cal
  	left join c_allocationhdr ca on cal.c_allocationhdr_id = ca.c_allocationhdr_id 
 where ca.datetrx between '2024-11-01' and '2024-11-30'
@@ -136,4 +137,7 @@ select cbkl.c_payment_id,ci.c_invoice_id,ci.dateinvoiced,cips.duedate,cbkl.datea
 						and cbkl.c_bpartner_id in (5155113)
   					group by cbkl.c_payment_id,ci.c_invoice_id,ci.dateinvoiced,cips.duedate,cal.amount,cbkl.trxamt,cp.payamt,cbkl.dateacct;
 
+SELECT * 
+FROM information_schema.columns 
+WHERE column_name = 'cof_qtdamortizacao';
 
