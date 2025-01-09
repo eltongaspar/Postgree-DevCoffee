@@ -214,7 +214,7 @@ select cbkl.dateacct as data_pagamento,coalesce(ci.dateinvoiced,cidate.dateinvoi
 	 end as test,
 	 sum(case 
 			when cp.isreceipt = 'N' and cp.payamt > 0 
-			then cp.payamt else 0 end) 
+			then cp.payamt else 0 end) *-1
 		as Devolucao_Estorno_Cancel
 	 --cp.user1_id,cp.user2_id,ci.user1_id,ci.user2_id,cil.user1_id,cil.user2_id, --validação de centro de custos - usado para analises 
 																--	cilcc.cil_cc,calant.cacicil_cc,cdoc.user1_id,cdoc.user2_id
