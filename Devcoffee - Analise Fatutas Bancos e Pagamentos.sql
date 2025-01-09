@@ -90,7 +90,7 @@ select cbkl.dateacct as data_pagamento,coalesce(ci.dateinvoiced,cidate.dateinvoi
 	 dce.dce_total,
 	 cbkl.trxamt,
 	 case 
-	 	when cbkl.trxamt  > 0 and dce.dce_total < 0 
+	 	when cbkl.trxamt  > 0 and dce.dce_total < 0 --and cical.invoice_list is null
 	 		then (cbkl.trxamt + dce.dce_total)
 	 	when  cbkl.trxamt  < 0
 	 		then cbkl.trxamt 
