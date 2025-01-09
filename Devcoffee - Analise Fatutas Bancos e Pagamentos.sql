@@ -50,10 +50,11 @@ with
 													when cp.isreceipt = 'Y' and cp.payamt > 0 
 													then cp.payamt 
 												else 0 end)  > 0) --calcula cancelamentos, devoluções e estornos
--- Fim 
 --Tabelas auxiliares temp --CTE (Common Table Expression)
+-- Fim 
 --##########################################################################################################################################
---Inicio - Consulta principal de receita e despesas 
+--Inicio -
+-- Consulta principal de receita e despesas 
 select cbkl.dateacct as data_pagamento,coalesce(ci.dateinvoiced,cidate.dateinvoiced) as data_emissao,coalesce(cips.duedate,cidate.duedate) as data_vencimento, --datas 
 		ao.ad_org_id as organizacao_cod, ao."name" as organizacao_nome, cba.c_bankaccount_id as banco_id , cba."name" as banco_nome, 
 		cb.c_bpartner_id  as pareceiro_id,cb."name" as parceiro_nome,
@@ -128,7 +129,7 @@ from c_bankstatementline cbkl
 																		cilcc.cil_cc,calant.cacicil_cc,cdoc.user1_id,cdoc.user2_id ,0) --cc valida valores de varios campos de varias tabelas
 	left join dev_cancel_estorn_temp as dce on dce.c_bpartner_id = cbkl.c_bpartner_id  and cbkl.trxamt = (dce.dce_total)*-1 --valores de cancelamentos,estornos,devoluções
 	where cbkl.ad_client_id = 5000017 --cliente 
-	--and cbkl.c_bpartner_id  In (5143868,5125433,5154905,5142112,5154338,5155113,5092534) --parceiros 
+	and cbkl.c_bpartner_id  In (5143868,5125433,5154905,5142112,5154338,5155113,5092534) --parceiros 
 	and cbkl.isactive  = 'Y' --registro ativo
 	and cbk.docstatus in ('CO','CL') --status completo 
 	--and ci.docstatus not in ('RE') --tratatiivas para gerar linhas de devoluções 
@@ -146,8 +147,8 @@ group by cbkl.dateacct,coalesce(ci.dateinvoiced,cidate.dateinvoiced),coalesce(ci
 	 	cp.docstatus,cp.docstatus,
 	 	Devolucao,
 	 	dce.dce_total
---Fim
 --Consulta principal de receita e despesas 
+--Fim
 --##########################################################################################################################################
 union all
 --Inicio
@@ -182,10 +183,17 @@ select cbkl.dateacct as data_pagamento,coalesce(ci.dateinvoiced,cidate.dateinvoi
 		end as Valid_Antecipacao,--validação de pagamentos e recebimentos antecipados
 	 cdoc.c_doctype_id as dooc_id ,cdoc."name" as doc_nome,
 	 cbkl.trxamt as valor , cbk.beginningbalance as saldo_inicial , cbk.endingbalance as saldo_final,
-	 'Y' as movimento_id, 
-	 --aqui forço os movimentos originais N(Despesa) a virar 'Y'(Receitas), valores continuam negativo, 
+	 case 
+	 	when sum(case 
+					when cp.isreceipt = 'N' and cp.payamt > 0 
+						then cp.payamt else 0 end) > 0
+	 		then 'DCE'
+	 		else ''--cp.isreceipt
+	 end as movimento_id, 
+	 --aqui forço os movimentos originais N(Despesa) a virar 'DCE'(Receitas), valores continuam negativo, 
 	 --para abater valores das transações de estornos, 
 	 --devoluções e cancelamentos de clientes para a visão de BI
+	 --DCE -   devoluções, cancelamentos e estoornos
 	 case when cbkl.trxamt > 0 then 'Entrada'
 	 		when cbkl.trxamt < 0 then 'Saida'
 	 end  as Tipo_Transacao,
@@ -229,7 +237,7 @@ from c_bankstatementline cbkl
 																		cilcc.cil_cc,calant.cacicil_cc,cdoc.user1_id,cdoc.user2_id ,0) --cc valida valores de varios campos de varias tabelas
 	left join dev_cancel_estorn_temp as dce on dce.c_bpartner_id = cbkl.c_bpartner_id  and cbkl.trxamt = (dce.dce_total)*-1 --valores de cancelamentos,estornos,devoluções
 	where cbkl.ad_client_id = 5000017 --cliente 
-	--and cbkl.c_bpartner_id  In (5143868,5125433,5154905,5142112,5154338,5155113,5092534) --parceiros 
+	and cbkl.c_bpartner_id  In (5143868,5125433,5154905,5142112,5154338,5155113,5092534) --parceiros 
 	and cbkl.isactive  = 'Y' --registro ativo
 	and cbk.docstatus in ('CO','CL') --status completo 
 	and cbkl.dateacct  between '2024-11-01' and '2024-11-30'
@@ -247,9 +255,9 @@ group by cbkl.dateacct,coalesce(ci.dateinvoiced,cidate.dateinvoiced),coalesce(ci
 having sum(case 
 			when cp.isreceipt = 'N' and cp.payamt > 0 
 			then cp.payamt else 0 end)  > 0;
---Inicio
 --Devoluções cancelamentos e estornos de clientes 
 --Pagamentos Cancelamentos, Estornos e Devoluções
+--Fim
 /*#####################################################################################################################################################
  --Descrição
  Relatório Técnico: Análise da Query SQL com CTE (Common Table Expression)
@@ -400,7 +408,10 @@ A query é extensível, permitindo ajustes para atender às necessidades especí
 
 Conclusão
 
-Esta query é uma solução robusta para geração de relatórios financeiros com integração ao Power BI. A organização em CTEs facilita a manutenção e ampliação do código, enquanto as técnicas de validação e agregação garantem consistência nos dados apresentados. Recomenda-se revisitar periodicamente os filtros e joins para assegurar que a query continue eficiente e alinhada com os requisitos do negócio.
+Esta query é uma solução robusta para geração de relatórios financeiros com integração ao Power BI. A organização em CTEs facilita a manutenção e ampliação do código, 
+enquanto as técnicas de validação e agregação garantem consistência nos dados apresentados.
+ Recomenda-se revisitar periodicamente os filtros e joins para assegurar que a query continue eficiente e alinhada com os requisitos do negócio.
+ Fim
  #########################################################################################################################*/
 
 

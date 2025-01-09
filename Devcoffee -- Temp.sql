@@ -148,18 +148,23 @@ select cp.c_bpartner_id, cb.name,
 	sum(case 
 			when cp.isreceipt = 'N' and cp.payamt > 0 
 			then cp.payamt else 0 end) 
-		as Devolucao_Estorno_Cancel
+		as Devolucao_Estorno_Cancel,
+	sum(case 
+			when cp.isreceipt = 'R' and cp.payamt > 0 
+			then cp.payamt else 0 end) 
+		as Receita
 from c_payment cp
 	left join c_bpartner cb on cb.c_bpartner_id = cp.c_bpartner_id --parceiros
 where cp.datetrx  between '2024-11-01' and '2024-11-30'
-	--and cp.c_bpartner_id in  (5125433,5154905,5142112,5154338,5155113,5092534)
+	and cp.c_bpartner_id in  (5125433,5154905,5142112,5154338,5155113,5092534)
 group by cp.c_bpartner_id, cb.name
 having sum(case 
 			when cp.isreceipt = 'N' and cp.payamt > 0 
 			then cp.payamt else 0 end)  > 0
 		and sum(case 
 			when cp.isreceipt = 'Y' and cp.payamt > 0 
-			then cp.payamt else 0 end)  > 0 ;
+			then cp.payamt else 0 end)  > 0 
+order by cp.c_bpartner_id;
 
 -- Pagamentos 
 select cp.c_bpartner_id, cb.name,
@@ -256,7 +261,13 @@ select cbkl.dateacct as data_pagamento,coalesce(ci.dateinvoiced,cidate.dateinvoi
 		end as Valid_Antecipacao,--validação de pagamentos e recebimentos antecipados
 	 cdoc.c_doctype_id as dooc_id ,cdoc."name" as doc_nome,
 	 cbkl.trxamt as valor , cbk.beginningbalance as saldo_inicial , cbk.endingbalance as saldo_final,
-	 cp.isreceipt as movimento_id,
+	 case 
+	 	when cbkl.trxamt  > 0 and dce.dce_total < 0 --and cical.invoice_list is null
+	 		then 'DCE'
+	 	when  cbkl.trxamt  < 0
+	 		then cp.isreceipt
+	 	else cp.isreceipt
+	 end as movimento_id, 
 	 case when cbkl.trxamt > 0 then 'Entrada'
 	 		when cbkl.trxamt < 0 then 'Saida'
 	 end  as Tipo_Transacao,
@@ -317,6 +328,6 @@ group by cbkl.dateacct,coalesce(ci.dateinvoiced,cidate.dateinvoiced),coalesce(ci
 	 	Devolucao,
 	 	dce.dce_total
 having sum(case 
-			when cp.isreceipt = 'N' and cp.payamt > 0 
+			when cp.isreceipt = 'Y' and cp.payamt > 0 
 			then cp.payamt else 0 end)  > 0
 order by cb."name";
