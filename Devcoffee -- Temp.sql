@@ -25,7 +25,7 @@ where  cbp."name" like ('%SANDRO DE SOUZA%');
 select ci.c_payment_id , ci.user1_id , ci.user2_id , ci.grandtotal, ci.dateinvoiced,
 * from c_invoice ci
 where ci.dateacct  between '2024-11-01' and '2024-11-30'
-	and ci.c_bpartner_id  = 5143868;
+	and ci.c_bpartner_id  = 5055701;
 -- c_payment_id nulo
 
 
@@ -40,7 +40,8 @@ where ci.dateacct between '2024-11-01' and '2024-11-30'
 select cp.c_invoice_id , cp.c_payment_id ,cp.user1_id , cp.user2_id , cp.datetrx,cp.payamt,cp.isreceipt, cp.docstatus , cp.c_charge_id ,cp.c_invoicepayschedule_id ,
 * from c_payment cp
 where cp.datetrx  between '2024-11-01' and '2024-11-30'
-	and cp.c_bpartner_id = 5125433;
+	and cp.c_bpartner_id = 5055701
+	and cp.user1_id = 5037121;
 
 --Alocação de pagamentos linhas
  select  ca.c_allocationhdr_id,cal.c_payment_id,cal.c_invoice_id,cal.c_invoice_id,cal.c_invoicepayschedule_id,
@@ -48,7 +49,8 @@ where cp.datetrx  between '2024-11-01' and '2024-11-30'
  * from c_allocationline cal
  	left join c_allocationhdr ca on cal.c_allocationhdr_id = ca.c_allocationhdr_id 
 where ca.datetrx between '2024-11-01' and '2024-11-30'
-	and cal.c_bpartner_id = 5143868;
+	and cal.c_bpartner_id = 5055701
+	and cal.c_payment_id  in (5378361,5377971,5378377);
 
 
 --Alocação de pagamentos 
@@ -60,13 +62,15 @@ select cbkl.ad_org_id ,cbkl.c_payment_id ,cbkl.c_invoice_id ,cbkl.trxamt,
 * from c_bankstatementline cbkl
 where cbkl.dateacct between '2024-11-01' and '2024-11-30'
 	and cbkl.isactive  = 'Y' --registro ativo
-	and cbkl.c_bpartner_id  = 5143868;
+	and cbkl.c_bpartner_id  = 5055701
+	and cbkl.c_payment_id  in (5378361,5377971,5378377);
  
  -- Extrato 
 select * from c_bankstatement cbk
 	left join c_bankstatementline cbkl on cbkl.c_bankstatement_id = cbk.c_bankstatement_id 
 where cbk.dateacct between '2024-11-01' and '2024-11-30'
-	and cbkl.c_bpartner_id = 5143868;
+	and cbkl.c_bpartner_id  = 5055701
+	and cbkl.c_payment_id  in (5378361,5377971,5378377);
 
 -- agendamentos de pagamentos 
 select cips.c_payment_id, ci.c_invoice_id,
@@ -268,7 +272,7 @@ select cbkl.dateacct as data_pagamento,coalesce(ci.dateinvoiced,cidate.dateinvoi
 					when cp.isreceipt = 'N' and cp.payamt > 0 
 						then cp.payamt else 0 end) > 0
 	 		then 'DCE'
-	 		else ''--cp.isreceipt
+	 		else 'NOT'--cp.isreceipt
 	 end as movimento_id, 
 	 --aqui forço os movimentos originais N(Despesa) a virar 'DCE'(Receitas), valores continuam negativo, 
 	 --para abater valores das transações de estornos, 
