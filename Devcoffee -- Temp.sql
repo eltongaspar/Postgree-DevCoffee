@@ -232,6 +232,8 @@ with
 													when cp.isreceipt = 'Y' and cp.payamt > 0 
 													then cp.payamt 
 												else 0 end)  > 0) --calcula cancelamentos, devoluções e estornos
+--Devoluções cancelamentos e estornos de clientes 
+--Pagamentos Cancelamentos, Estornos e Devoluções 
 select cbkl.dateacct as data_pagamento,coalesce(ci.dateinvoiced,cidate.dateinvoiced) as data_emissao,coalesce(cips.duedate,cidate.duedate) as data_vencimento, --datas 
 		ao.ad_org_id as organizacao_cod, ao."name" as organizacao_nome, cba.c_bankaccount_id as banco_id , cba."name" as banco_nome, 
 		cb.c_bpartner_id  as pareceiro_id,cb."name" as parceiro_nome,
@@ -262,16 +264,19 @@ select cbkl.dateacct as data_pagamento,coalesce(ci.dateinvoiced,cidate.dateinvoi
 	 cdoc.c_doctype_id as dooc_id ,cdoc."name" as doc_nome,
 	 cbkl.trxamt as valor , cbk.beginningbalance as saldo_inicial , cbk.endingbalance as saldo_final,
 	 case 
-	 	when cbkl.trxamt  > 0 and dce.dce_total < 0 --and cical.invoice_list is null
+	 	when sum(case 
+					when cp.isreceipt = 'N' and cp.payamt > 0 
+						then cp.payamt else 0 end) > 0
 	 		then 'DCE'
-	 	when  cbkl.trxamt  < 0
-	 		then cp.isreceipt
-	 	else cp.isreceipt
+	 		else ''--cp.isreceipt
 	 end as movimento_id, 
+	 --aqui forço os movimentos originais N(Despesa) a virar 'DCE'(Receitas), valores continuam negativo, 
+	 --para abater valores das transações de estornos, 
+	 --devoluções e cancelamentos de clientes para a visão de BI
+	 --DCE -   devoluções, cancelamentos e estoornos
 	 case when cbkl.trxamt > 0 then 'Entrada'
 	 		when cbkl.trxamt < 0 then 'Saida'
 	 end  as Tipo_Transacao,
-	 --cp.cof_creditdate, --anslise para devoluções de creditos 
 	 cical.invoice_list as invoice_list,
 	 cp.docstatus doc_status_pag, cp.docstatus doc_status_fatura,
 	 case when ci.docstatus in ('RE') or cp.docstatus in ('RE')
@@ -328,6 +333,5 @@ group by cbkl.dateacct,coalesce(ci.dateinvoiced,cidate.dateinvoiced),coalesce(ci
 	 	Devolucao,
 	 	dce.dce_total
 having sum(case 
-			when cp.isreceipt = 'Y' and cp.payamt > 0 
-			then cp.payamt else 0 end)  > 0
-order by cb."name";
+			when cp.isreceipt = 'N' and cp.payamt > 0 
+			then cp.payamt else 0 end)  > 0;
