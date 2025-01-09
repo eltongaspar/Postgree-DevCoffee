@@ -144,7 +144,7 @@ WHERE column_name = 'cof_qtdamortizacao';
 
 
 -- Pagamentos Cancelamentos, Estornos e Devoluções 
-select cp.c_bpartner_id, cb.name,cp.c_payment_id,
+select cp.c_bpartner_id, cb.name,
 	sum(case 
 			when cp.isreceipt = 'N' and cp.payamt > 0 
 			then cp.payamt else 0 end) 
@@ -153,7 +153,7 @@ from c_payment cp
 	left join c_bpartner cb on cb.c_bpartner_id = cp.c_bpartner_id --parceiros
 where cp.datetrx  between '2024-11-01' and '2024-11-30'
 	--and cp.c_bpartner_id in  (5125433,5154905,5142112,5154338,5155113,5092534)
-group by cp.c_bpartner_id, cb.name,cp.c_payment_id
+group by cp.c_bpartner_id, cb.name
 having sum(case 
 			when cp.isreceipt = 'N' and cp.payamt > 0 
 			then cp.payamt else 0 end)  > 0

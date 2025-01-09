@@ -124,7 +124,7 @@ from c_bankstatementline cbkl
 	--and cp.isreceipt = 'Y'
 	--and cbkl.dateacct between current_date - interval '5 years' AND current_date
 	and cbkl.dateacct  between '2024-11-01' and '2024-11-30'
-order by cba.c_bankaccount_id,cbkl.c_bankstatementline_id ;
+order by cb."name" ;
 /*#####################################################################################################################################################
  A consulta SQL fornecida é uma combinação complexa de várias tabelas, CTEs e subconsultas que cria um relatório detalhado para análise de custos. Segue uma resumo funcional dividido em partes:
 
