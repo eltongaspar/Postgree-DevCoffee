@@ -82,7 +82,7 @@ select cbkl.dateacct as data_pagamento,coalesce(ci.dateinvoiced,cidate.dateinvoi
 			else 'OK'
 		end as Valid_Antecipacao,--validação de pagamentos e recebimentos antecipados
 	 cdoc.c_doctype_id as dooc_id ,cdoc."name" as doc_nome, --tippos docs
-	 sum(cbkl.trxamt) as valor, --valor 
+	 cbkl.trxamt as valor, --valor 
 	 cbk.beginningbalance as saldo_inicial , cbk.endingbalance as saldo_final, --saldos de bancos 
 	 cp.isreceipt as movimento_id, --receita Y N despesa
 	 case when cbkl.trxamt > 0 then 'Entrada'
@@ -94,13 +94,13 @@ select cbkl.dateacct as data_pagamento,coalesce(ci.dateinvoiced,cidate.dateinvoi
 	 	then 'Devolução'
 	 	else ''
 	 end as Devolucao,
-	 sum(dce.dce_total) as dce_total,(cbkl.trxamt) as cbkl_trxamt, --valores 
+	 dce.dce_total as dce_total,cbkl.trxamt as cbkl_trxamt, --valores 
 	 case 
-	 	when sum(cbkl.trxamt)  > 0 and sum(dce.dce_total) < 0
-	 		then (sum(cbkl.trxamt) + sum(dce.dce_total))
-	 	when  sum(cbkl.trxamt)  < 0
-	 		then sum(cbkl.trxamt) 
-	 	else sum(cbkl.trxamt)
+	 	when cbkl.trxamt > 0 and dce.dce_total < 0
+	 		then (cbkl.trxamt) + (dce.dce_total)
+	 	when  cbkl.trxamt < 0
+	 		then cbkl.trxamt
+	 	else cbkl.trxamt
 	 end as test --analise
 	 --cp.user1_id,cp.user2_id,ci.user1_id,ci.user2_id,cil.user1_id,cil.user2_id, --validação de centro de custos - usado para analises 
 																--	cilcc.cil_cc,calant.cacicil_cc,cdoc.user1_id,cdoc.user2_id
@@ -130,83 +130,90 @@ from c_bankstatementline cbkl
 	--and cp.isreceipt = 'Y'
 	--and cbkl.dateacct between current_date - interval '5 years' AND current_date
 	and cbkl.dateacct  between '2024-11-01' and '2024-11-30'
-group by cbkl.dateacct,coalesce(ci.dateinvoiced,cidate.dateinvoiced),coalesce(cips.duedate,cidate.duedate), --datas 
-		ao.ad_org_id,ao."name", cba.c_bankaccount_id, cba."name",
-		cb.c_bpartner_id,cb."name",
-		centro_custo_id,centro_custo_nome,cc_ref,Valid_Antecipacao,
-		cdoc.c_doctype_id,cdoc."name",
-	 	cbkl.trxamt,cbk.beginningbalance,cbk.endingbalance,
-	 	cp.isreceipt,
-	 	cical.invoice_list,
-	 	cp.docstatus,cp.docstatus,
-	 	Devolucao,
-	 	dce.dce_total
+order by cb."name";
 --Consulta principal de receita e despesas 
 --Fim
 --##########################################################################################################################################
-union all
+
+
+
+--##########################################################################################################################################
 --Inicio
 --Devoluções cancelamentos e estornos de clientes 
+--##########################################################################################################################################
+--Inicio 
+--Tabelas auxiliares temp CTE (Common Table Expression)
+--##########################################################################################################################################
+--Inicio 
+--Tabelas auxiliares temp CTE (Common Table Expression)
+with
+	cil_temp as (select ci.c_invoice_id, 
+					coalesce(cil.user1_id,cil.user2_id,0) as cil_cc
+				from c_invoiceline cil --faturas linhas
+					left join c_invoice ci on cil.c_invoice_id = ci.c_invoice_id --faturas
+				group by ci.c_invoice_id,cil_cc), --essa subquery faz consulta dos itens da fatura e retorna centro de custo 
+	cal_temp as (select cbkl.c_payment_id,
+					coalesce(ci.user1_id,ci.user2_id,cil.user1_id,cil.user2_id,0) as cacicil_cc,
+					ROW_NUMBER() OVER (PARTITION BY cbkl.c_payment_id ORDER BY cbkl.c_payment_id) AS row_number --rank e rotulos dos dados para pegar o primeiro registro na posição
+  				from c_bankstatementline cbkl
+  						left join c_allocationline cal on cal.c_payment_id  = cbkl.c_payment_id --alicação de pagamentos linhas
+  						left join c_invoice ci on cal.c_invoice_id = ci.c_invoice_id --faturas
+  						left join c_invoiceline cil on cil.c_invoice_id = ci.c_invoice_id --faturas linhas
+  				where coalesce(ci.user1_id,ci.user2_id,cil.user1_id,cil.user2_id,0) <> 0 --exclusão pagamentos que retornam dois agrupamentos e o primeiro é 0 
+  				group by cbkl.c_payment_id, cacicil_cc), --essa subquery analisa as alocações de pagamentos adiantados e rerorna os cc usados nas faturas que usaram seus creditos 
+  	ci_temp as (select 
+   					cal.c_payment_id,
+    				string_agg(ci.c_invoice_id::TEXT, ', ') as invoice_list
+				FROM c_bankstatementline cbkl --extrato bancario linhas 
+						left join c_allocationline cal on cal.c_payment_id = cbkl.c_payment_id --alocação de pagamentos 
+						left join c_invoice ci on cal.c_invoice_id = ci.c_invoice_id --faturas
+				group by cal.c_payment_id), --essa subquery retorna a lista das faturas que foram pagas com o crédito antecipado em forma de linha para não somar os itens repetidos
+	cidate_temp as (select cbkl.c_payment_id,ci.c_invoice_id,ci.dateinvoiced,cips.duedate,
+						ROW_NUMBER() OVER (PARTITION BY cbkl.c_payment_id ORDER BY cbkl.c_payment_id) AS row_number --rank e rotulos dos dados para pegar o primeiro registro na posição
+  					from c_bankstatementline cbkl
+  						left join c_allocationline cal on cal.c_payment_id  = cbkl.c_payment_id --alicação de pagamentos linhas
+  						left join c_invoice ci on cal.c_invoice_id = ci.c_invoice_id --faturas
+  						left join c_invoicepayschedule cips on cips.c_invoice_id = ci.c_invoice_id
+  						left join c_invoiceline cil on cil.c_invoice_id = ci.c_invoice_id --faturas linhas
+  					group by cbkl.c_payment_id,ci.c_invoice_id,ci.dateinvoiced,cips.duedate), --essa subquery analisa as alocações de pagamentos adiantados e retorna as datas das faturas
+  	dev_cancel_estorn_temp as (select cp.c_bpartner_id, cb.name,
+									sum(case 
+											when cp.isreceipt = 'N' and cp.payamt > 0 
+											then cp.payamt else 0 end) *-1
+								as dce_total
+								from c_payment cp
+									left join c_bpartner cb on cb.c_bpartner_id = cp.c_bpartner_id --parceiros
+								where cp.datetrx  between '2024-11-01' and '2024-11-30'
+								group by cp.c_bpartner_id, cb.name
+								having sum(case 
+												when cp.isreceipt = 'N' and cp.payamt > 0 
+													then cp.payamt 
+											else 0 end)  > 0
+										and sum(case 
+													when cp.isreceipt = 'Y' and cp.payamt > 0 
+													then cp.payamt 
+												else 0 end)  > 0) --calcula cancelamentos, devoluções e estornos
+--Tabelas auxiliares temp --CTE (Common Table Expression)
+-- Fim 
+--##########################################################################################################################################
+--Devoluções cancelamentos e estornos de clientes 
 --Pagamentos Cancelamentos, Estornos e Devoluções 
-select cbkl.dateacct as data_pagamento,coalesce(ci.dateinvoiced,cidate.dateinvoiced) as data_emissao,coalesce(cips.duedate,cidate.duedate) as data_vencimento, --datas 
-		ao.ad_org_id as organizacao_cod, ao."name" as organizacao_nome, cba.c_bankaccount_id as banco_id , cba."name" as banco_nome, --cod e noome
-		cb.c_bpartner_id  as pareceiro_id,cb."name" as parceiro_nome, --cod e nomes
-		case when (cc.c_elementvalue_id is null and cp.reversal_id is not null) or (cp.docstatus = 'RE') or (cbk.docstatus  = 'RE') or (cp.docstatus = 'RE')
-						or (cbkl.description like ('%^%') or cbkl.description like ('%<%') or cbkl.description like ('%>%'))
-				then -1
-			when cc.c_elementvalue_id is null 
-				then 0
-			else cc.c_elementvalue_id
-		end as centro_custo_id, --validação de cc pelos campos das tabelas e analisa se nao e estorno
-		case when (cc."name" is null and cp.reversal_id is not null) or (cp.docstatus = 'RE') or (cbk.docstatus  = 'RE') or (cp.docstatus = 'RE')
-						or (cbkl.description like ('%^%') or cbkl.description like ('%<%') or cbkl.description like ('%>%'))
-			then 'ESTORNO'
-			when cc."name" is null then 'ANALISAR'
-			else cc."name" 
-		end as centro_custo_nome, ----validação de cc pelos campos das tabelas e analisa se nao e estorno
-		cc.value as cc_ref, --cc ref BI
-		case when (((cc.c_elementvalue_id is not null and cp.reversal_id is null) or (cp.docstatus not in ('RE')) or (cbk.docstatus not in ('RE')) or (cp.docstatus not in ('RE'))
-								or (cbkl.description not like ('%^%') or cbkl.description not like ('%<%') or cbkl.description not like ('%>%'))) 
-										and cc.c_elementvalue_id in (5041450) and cical.invoice_list is null)						
-					or (((cc.c_elementvalue_id is null and cp.reversal_id is null) or (cp.docstatus not in ('RE')) or (cbk.docstatus not in ('RE')) or (cp.docstatus not in ('RE'))
-								or (cbkl.description not like ('%^%') or cbkl.description not like ('%<%') or cbkl.description not like ('%>%'))) 
-										and cdoc.c_doctype_id in (5002293) and cical.invoice_list is null)
-			then 'Analisar' 
-			else 'OK'
-		end as Valid_Antecipacao,--validação de pagamentos e recebimentos antecipados
-	 cdoc.c_doctype_id as dooc_id ,cdoc."name" as doc_nome, --tipos documentos 
-	 sum(cbkl.trxamt) as valor , 
-	 cbk.beginningbalance as saldo_inicial , cbk.endingbalance as saldo_final, --saldos bancarios
-	 case 
-	 	when sum(case 
-					when cp.isreceipt = 'N' and cp.payamt > 0 
-						then cp.payamt else 0 end) > 0
-	 		then 'DCE'
-	 		else ''
-	 end as movimento_id, 
-	 --aqui forço os movimentos originais N(Despesa) a virar 'DCE'(Receitas), valores continuam negativo, 
-	 --para abater valores das transações de estornos, 
-	 --devoluções e cancelamentos de clientes para a visão de BI
-	 --DCE -   devoluções, cancelamentos e estoornos
-	 case when cbkl.trxamt > 0 then 'Entrada'
-	 		when cbkl.trxamt < 0 then 'Saida'
-	 end  as Tipo_Transacao,
-	 cical.invoice_list as invoice_list, --lista de faturas pagas
-	 cp.docstatus doc_status_pag, cp.docstatus doc_status_fatura, --staus documentos
-	 case when ci.docstatus in ('RE') or cp.docstatus in ('RE')
-	 	then 'Devolução'
-	 	else ''
-	 end as Devolucao,
-	 sum(dce.dce_total) as dce_total,(cbkl.trxamt) as cbkl_trxamt,
-	 case 
-	 	when cbkl.trxamt  > 0 and dce.dce_total < 0 --and cical.invoice_list is null
-	 		then (sum(cbkl.trxamt) + sum(dce.dce_total))
-	 	when  cbkl.trxamt  < 0
-	 		then sum(cbkl.trxamt) 
-	 	else sum(cbkl.trxamt)
-	 end as test --analise
-	 --cp.user1_id,cp.user2_id,ci.user1_id,ci.user2_id,cil.user1_id,cil.user2_id, --validação de centro de custos - usado para analises 
-																--	cilcc.cil_cc,calant.cacicil_cc,cdoc.user1_id,cdoc.user2_id
+select cb.c_bpartner_id,cb."name",
+	sum(case 
+			when cp.isreceipt = 'N' and cp.payamt > 0 
+			then cp.payamt*-1 else 0 end) 
+		as Despesas,
+	sum(case 
+			when cp.isreceipt = 'Y' and cp.payamt > 0 
+			then cp.payamt else 0 end) 
+		as Receita,
+	sum(case 
+			when cp.isreceipt = 'Y' and cp.payamt > 0 
+			then cp.payamt else 0 end) - 
+	sum(case 
+			when cp.isreceipt = 'N' and cp.payamt > 0 
+			then cp.payamt else 0 end)
+	as Dirença
 from c_bankstatementline cbkl
 	left join c_payment cp on cp.c_payment_id  = cbkl.c_payment_id --pagamentos
 	left join c_allocationline cal on cal.c_payment_id = cbkl.c_bankstatementline_id --alocação de pagamentos
@@ -218,32 +225,32 @@ from c_bankstatementline cbkl
 	left join c_invoice ci on cp.c_invoice_id = ci.c_invoice_id --faturas
 	left join c_invoiceline cil on cil.c_invoiceline_id = ci.c_invoice_id --faturas linhas
 	left join c_invoicepayschedule cips on cips.c_invoicepayschedule_id = cp.c_invoicepayschedule_id --agendamentos de pagamentos 
-	left join cil_temp cilcc on cil.c_invoice_id = ci.c_invoice_id --Itens da Faturaem cte
-	left join cal_temp calant on calant.c_payment_id = cbkl.c_payment_id and calant.row_number = 1 -- alocação de pagamentos cte
-	left join cidate_temp cidate on cidate.c_payment_id = cbkl.c_payment_id and cidate.row_number = 1 -- alocação de pagamentos e datas 
-	left join ci_temp cical on cical.c_payment_id = cbkl.c_payment_id -- Faturas pagas com credito antecipados cte 
 	left join c_elementvalue cc on cc.c_elementvalue_id = coalesce(cp.user1_id,cp.user2_id,ci.user1_id,ci.user2_id,cil.user1_id,cil.user2_id,
-																		cilcc.cil_cc,calant.cacicil_cc,cdoc.user1_id,cdoc.user2_id ,0) --cc valida valores de varios campos de varias tabelas
-	left join dev_cancel_estorn_temp as dce on dce.c_bpartner_id = cbkl.c_bpartner_id  and cbkl.trxamt = (dce.dce_total)*-1 --valores de cancelamentos,estornos,devoluções
+																		cdoc.user1_id,cdoc.user2_id ,0) --cc valida valores de varios campos de varias tabelas
 	where cbkl.ad_client_id = 5000017 --cliente 
 	--and cbkl.c_bpartner_id  In (5143868,5125433,5154905,5142112,5154338,5155113,5092534) --parceiros 
 	and cbkl.isactive  = 'Y' --registro ativo
 	and cbk.docstatus in ('CO','CL') --status completo 
 	and cbkl.dateacct  between '2024-11-01' and '2024-11-30'
-group by cbkl.dateacct,coalesce(ci.dateinvoiced,cidate.dateinvoiced),coalesce(cips.duedate,cidate.duedate), --datas 
-		ao.ad_org_id,ao."name", cba.c_bankaccount_id, cba."name",
-		cb.c_bpartner_id,cb."name",
-		centro_custo_id,centro_custo_nome,cc_ref,Valid_Antecipacao,
-		cdoc.c_doctype_id,cdoc."name",
-	 	cbkl.trxamt,cbk.beginningbalance,cbk.endingbalance,
-	 	cp.isreceipt,
-	 	cical.invoice_list,
-	 	cp.docstatus,cp.docstatus,
-	 	Devolucao,
-	 	dce.dce_total
+group by cb.c_bpartner_id,cb."name"
 having sum(case 
 			when cp.isreceipt = 'N' and cp.payamt > 0 
-			then cp.payamt else 0 end)  > 0;
+			then cp.payamt else 0 end)  > 0
+		and sum(case 
+			when cp.isreceipt = 'Y' and cp.payamt > 0 
+			then cp.payamt else 0 end)  > 0
+		and sum(case 
+			when cp.isreceipt = 'Y' and cp.payamt > 0 
+			then cp.payamt else 0 end) -
+		sum(case 
+			when cp.isreceipt = 'N' and cp.payamt > 0 
+			then cp.payamt else 0 end) 	> 0
+order by cb."name";
+--Devoluções cancelamentos e estornos de clientes 
+--Pagamentos Cancelamentos, Estornos e Devoluções
+--Fim
+/*#####################################################################################################################################################
+
 --Devoluções cancelamentos e estornos de clientes 
 --Pagamentos Cancelamentos, Estornos e Devoluções
 --Fim
