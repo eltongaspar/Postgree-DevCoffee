@@ -2,6 +2,7 @@
 
 --CREATE MATERIALIZED VIEW adempiere.rv_cof_relatorioregimecaixa_acero
 --TABLESPACE pg_default
+--EXPLAIN (analyze,COSTS,verbose,BUFFERS,format JSON) -- ANALISE QUERY 
 SELECT 'PAGAMENTO_DIRETO_COM_FINALIDADE'::text AS tipo,
     p.ad_client_id,
     p.c_payment_id,

@@ -25,7 +25,7 @@ where  cbp."name" like ('%SANDRO DE SOUZA%');
 select ci.c_payment_id , ci.user1_id , ci.user2_id , ci.grandtotal, ci.dateinvoiced,
 * from c_invoice ci
 where ci.dateacct  between '2024-11-01' and '2024-11-30'
-	and ci.c_bpartner_id  = 5055701;
+	and ci.c_bpartner_id  = 5151800;
 -- c_payment_id nulo
 
 
@@ -34,14 +34,13 @@ select cil.user1_id ,cil.user2_id, cil.linenetamt ,totallines,
 * from c_invoiceline cil
 	left join c_invoice ci on ci.c_invoice_id =cil.c_invoice_id 
 where ci.dateacct between '2024-11-01' and '2024-11-30'
-	and ci.c_bpartner_id = 5143868;
+	and ci.c_bpartner_id = 5151800;
 
 -- Pagamentos 
 select cp.c_invoice_id , cp.c_payment_id ,cp.user1_id , cp.user2_id , cp.datetrx,cp.payamt,cp.isreceipt, cp.docstatus , cp.c_charge_id ,cp.c_invoicepayschedule_id ,
 * from c_payment cp
 where cp.datetrx  between '2024-11-01' and '2024-11-30'
-	and cp.c_bpartner_id = 5055701
-	and cp.user1_id = 5037121;
+	and cp.c_bpartner_id = 5151800;
 
 --Alocação de pagamentos linhas
  select  ca.c_allocationhdr_id,cal.c_payment_id,cal.c_invoice_id,cal.c_invoice_id,cal.c_invoicepayschedule_id,
@@ -49,8 +48,7 @@ where cp.datetrx  between '2024-11-01' and '2024-11-30'
  * from c_allocationline cal
  	left join c_allocationhdr ca on cal.c_allocationhdr_id = ca.c_allocationhdr_id 
 where ca.datetrx between '2024-11-01' and '2024-11-30'
-	and cal.c_bpartner_id = 5055701
-	and cal.c_payment_id  in (5378361,5377971,5378377);
+	and cal.c_bpartner_id = 5151800;
 
 
 --Alocação de pagamentos 
@@ -62,8 +60,7 @@ select cbkl.ad_org_id ,cbkl.c_payment_id ,cbkl.c_invoice_id ,cbkl.trxamt,
 * from c_bankstatementline cbkl
 where cbkl.dateacct between '2024-11-01' and '2024-11-30'
 	and cbkl.isactive  = 'Y' --registro ativo
-	and cbkl.c_bpartner_id  = 5055701
-	and cbkl.c_payment_id  in (5378361,5377971,5378377);
+	and cbkl.c_bpartner_id  = 5151800;
  
  -- Extrato 
 select * from c_bankstatement cbk
@@ -77,7 +74,7 @@ select cips.c_payment_id, ci.c_invoice_id,
 * from c_invoicepayschedule cips
 	left join c_invoice ci on cips.c_invoice_id = ci.c_invoice_id
 where cips.duedate between '2024-11-01' and '2024-11-30'
-	and ci.c_bpartner_id = 5143868
+	and ci.c_bpartner_id = 5151800
 order by cips.c_invoice_id;
 	--and cips.c_payment_id not in (null,0);
 
@@ -86,7 +83,7 @@ order by cips.c_invoice_id;
  * from c_bankstatementline cbkl
   	left join c_allocationline cal on cal.c_payment_id  = cbkl.c_payment_id 
   	left join c_invoice ci on cal.c_invoice_id = ci.c_invoice_id 
-  where cbkl.c_bpartner_id = 5143868 and cbkl.dateacct between '2024-11-01' and '2024-12-30';
+  where cbkl.c_bpartner_id = 5151800 and cbkl.dateacct between '2024-11-01' and '2024-12-30';
  
 --Extrato linhas com inner joins para rastreamento de pagamentos antecipados 
 select cbkl.c_payment_id, cbkl.c_payment_id ,cp.c_payment_id,ci.c_invoice_id ,ci.user1_id, cp.user1_id,
@@ -95,9 +92,13 @@ from c_bankstatementline cbkl
   	left join c_allocationline cal on cal.c_payment_id  = cbkl.c_payment_id 
   	left join c_invoice ci on cal.c_invoice_id = ci.c_invoice_id 
   	left join c_payment cp on cp.c_payment_id  = cbkl.c_payment_id --cbkl.c_invoice_id 
-where cbkl.c_bpartner_id in (5143868)
+where cbkl.c_bpartner_id in (5151800)
 group by cbkl.c_payment_id, cbkl.c_payment_id ,cp.c_payment_id,
 		ci.c_invoice_id ,ci.user1_id,cp.c_payment_id;
+
+--devoluções 
+select * from m_rma mr;
+select * from m_rmaline mrl;
 
 --movimentações de estoques  
 select * from m_inout mi 

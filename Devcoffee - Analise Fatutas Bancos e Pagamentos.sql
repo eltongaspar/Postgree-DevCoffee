@@ -3,6 +3,7 @@
 --##########################################################################################################################################
 --Inicio 
 --Tabelas auxiliares temp CTE (Common Table Expression)
+--EXPLAIN (analyze,COSTS,verbose,BUFFERS,format JSON) -- ANALISE QUERY 
 with
 	cil_temp as (select ci.c_invoice_id, 
 					coalesce(cil.user1_id,cil.user2_id,0) as cil_cc
