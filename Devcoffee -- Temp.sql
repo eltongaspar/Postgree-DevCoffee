@@ -149,7 +149,7 @@ WHERE column_name = 'cof_qtdamortizacao';
 
 
 -- Pagamentos Cancelamentos, Estornos e Devoluções 
-select cp.c_bpartner_id, cb.name,
+select cp.c_bpartner_id, cb.name,cp.description,cp.docstatus,cp.reversal_id,
 	sum(case 
 			when cp.isreceipt = 'N' and cp.payamt > 0 
 			then cp.payamt*-1 else 0 end) 
@@ -169,11 +169,10 @@ from c_payment cp
 	left join c_bpartner cb on cb.c_bpartner_id = cp.c_bpartner_id --parceiros
 where cp.datetrx  between '2024-11-01' and '2024-11-30'
 	--and cp.c_bpartner_id in  (5125433,5154905,5142112,5154338,5155113,5092534)
-	--and cp.docstatus not in ('RE')	or cp.documentno like not (%^%) or cp.documentno not like(%<%) or or cp.documentno not like(%>%)
-	--or cp.description not like(%^%) or cp.description not like (%<%) or or cp.description not like(%>%)
---	and cp.isactive = 'Y' and cp.docation = 'CL'
---	and cp.reversal_id is null
-group by cp.c_bpartner_id, cb.name
+	and cp.docstatus not in ('RE')
+	and cp.reversal_id is null
+	--and (cp.description not like ('%^%') or cp.description not like ('%<%') or cp.description not like ('%>%'))
+group by cp.c_bpartner_id, cb.name,cp.description,cp.docstatus,cp.reversal_id
 having sum(case 
 			when cp.isreceipt = 'N' and cp.payamt > 0 
 			then cp.payamt else 0 end)  > 0
