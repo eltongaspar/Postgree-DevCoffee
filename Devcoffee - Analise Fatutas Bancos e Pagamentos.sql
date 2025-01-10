@@ -67,6 +67,7 @@ select cbkl.dateacct as data_pagamento,coalesce(ci.dateinvoiced,cidate.dateinvoi
 		end as centro_custo_id, --validação de cc pelos campos das tabelas e analisa se nao e estorno
 		case when (cc."name" is null and cp.reversal_id is not null) or (cp.docstatus = 'RE') or (cbk.docstatus  = 'RE') or (cp.docstatus = 'RE')
 						or (cbkl.description like ('%^%') or cbkl.description like ('%<%') or cbkl.description like ('%>%'))
+						or (cp.description like ('%^%') or cp.description like ('%<%') or cp.description like ('%>%'))
 			then 'ESTORNO'
 			when cc."name" is null then 'ANALISAR'
 			else cc."name" 
@@ -134,8 +135,6 @@ order by cb."name";
 --Consulta principal de receita e despesas 
 --Fim
 --##########################################################################################################################################
-
-
 
 --##########################################################################################################################################
 --Inicio
