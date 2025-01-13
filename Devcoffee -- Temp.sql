@@ -190,3 +190,198 @@ having sum(case
 			when cp.isreceipt = 'N' and cp.payamt > 0 
 			then cp.payamt else 0 end) 	> 0
 order by cb.name;
+
+--extratos cabençalho
+select ao."name",cba."name",cbk.dateacct,cbk.statementdifference ,cbk.beginningbalance,cbk.endingbalance,
+* from c_bankstatement cbk
+	left join c_bankaccount cba on cba.c_bankaccount_id = cbk.c_bankaccount_id --contas bancarias
+	left join ad_org ao on ao.ad_org_id  = cbk.ad_org_id -- empresas
+where cbk.dateacct between ('2024-11-01') and ('2024-11-30')
+	order by cbk.ad_org_id,cbk.c_bankaccount_id,cbk.dateacct;
+
+-- Últimos movimentos diários do extrato bancário
+WITH UltimoMovimento AS (
+    SELECT 
+    	ao.ad_org_id as organizacao_cod,
+        ao."name" AS empresa_nome,
+        cbk.c_bankaccount_id as banco_id,
+        cba."name" AS banco_nome,
+        cbk.dateacct AS data_movimento,
+        cbk.statementdifference AS diferenca_saldo,
+        cbk.beginningbalance AS saldo_inicial,
+        cbk.endingbalance AS saldo_final,
+        ROW_NUMBER() OVER (
+            PARTITION BY cbk.ad_org_id, cbk.c_bankaccount_id, cbk.dateacct
+            ORDER BY cbk.dateacct DESC, cbk.updated DESC -- Ordena para pegar o último registro
+        ) AS row_num
+    FROM 
+        c_bankstatement cbk
+        LEFT JOIN c_bankaccount cba ON cba.c_bankaccount_id = cbk.c_bankaccount_id -- Contas bancárias
+        LEFT JOIN ad_org ao ON ao.ad_org_id = cbk.ad_org_id -- Empresas
+    WHERE 
+        cbk.dateacct BETWEEN ('2024-11-01') AND ('2024-11-30')
+)
+SELECT 
+	organizacao_cod,
+    empresa_nome,
+    banco_id,
+    banco_nome,
+    data_movimento,
+    diferenca_saldo,
+    saldo_inicial,
+    saldo_final
+FROM 
+    UltimoMovimento
+WHERE 
+    row_num = 1 -- Pega apenas o último movimento do dia por conta e empresa
+ORDER BY 
+    empresa_nome, banco_nome, data_movimento;
+/*
+ * Últimos Movimentos Diários do Extrato Bancário
+Esta query SQL foi projetada para obter os últimos lançamentos diários registrados no extrato bancário de cada conta bancária, por empresa, em um determinado período. O objetivo é identificar o fechamento do dia em cada conta bancária de cada organização.
+
+Componentes Principais da Query
+CTE UltimoMovimento:
+
+A Common Table Expression (CTE) cria um conjunto de dados contendo os lançamentos do extrato bancário (c_bankstatement) no período especificado.
+Cada registro no conjunto inclui:
+Identificação da empresa (ad_org_id e name).
+Identificação da conta bancária (c_bankaccount_id e name).
+Data do movimento (dateacct).
+Informações financeiras:
+Saldo inicial (beginningbalance).
+Saldo final (endingbalance).
+Diferença de saldo no movimento (statementdifference).
+Particionamento com ROW_NUMBER():
+
+A função ROW_NUMBER() é usada para identificar o último registro diário para cada combinação de empresa e conta bancária.
+Os registros são particionados por:
+Código da organização (ad_org_id).
+Código da conta bancária (c_bankaccount_id).
+Data do movimento (dateacct).
+Dentro de cada partição, os registros são ordenados por:
+Data do movimento (dateacct) em ordem decrescente.
+Data de atualização (updated) em ordem decrescente, para resolver empates.
+Filtro Final (row_num = 1):
+
+Apenas o último registro de cada dia, por conta e empresa, é selecionado.
+Resultado Final:
+
+O resultado retorna os seguintes campos:
+Código da organização (organizacao_cod).
+Nome da organização (empresa_nome).
+Código da conta bancária (banco_id).
+Nome do banco associado (banco_nome).
+Data do movimento (data_movimento).
+Diferença de saldo (diferenca_saldo).
+Saldo inicial do dia (saldo_inicial).
+Saldo final do dia (saldo_final).
+Ordenação:
+
+Os resultados são ordenados por:
+Nome da organização (empresa_nome).
+Nome da conta bancária (banco_nome).
+Data do movimento (data_movimento).
+Cenário de Aplicação
+Finalidade: Gerar relatórios financeiros diários que consolidam as informações mais relevantes para o acompanhamento do fluxo de caixa e análise de saldos bancários.
+Período: A consulta é configurada para operar no intervalo de 1º a 30 de novembro de 2024.
+Benefícios:
+Identifica rapidamente os saldos de fechamento de cada dia por conta e empresa.
+Facilita a reconciliação bancária e auditorias.
+*/
+
+
+-- Últimos lançamentos por empresa e conta bancária no período
+WITH UltimoMovimento AS (
+    SELECT 
+    	ao.ad_org_id as organizacao_cod,
+        ao."name" AS empresa_nome,
+        cbk.c_bankaccount_id as banco_id,
+        cba."name" AS banco_nome,
+        cbk.dateacct AS data_movimento,
+        cbk.statementdifference AS diferenca_saldo,
+        cbk.beginningbalance AS saldo_inicial,
+        cbk.endingbalance AS saldo_final,
+        ROW_NUMBER() OVER (
+            PARTITION BY cbk.ad_org_id, cbk.c_bankaccount_id -- Particiona por empresa e conta bancária
+            ORDER BY cbk.dateacct DESC, cbk.updated DESC -- Ordena para pegar o último registro
+        ) AS row_num
+    FROM 
+        c_bankstatement cbk
+        LEFT JOIN c_bankaccount cba ON cba.c_bankaccount_id = cbk.c_bankaccount_id -- Contas bancárias
+        LEFT JOIN ad_org ao ON ao.ad_org_id = cbk.ad_org_id -- Empresas
+    WHERE 
+        cbk.dateacct BETWEEN ('2024-11-01') AND ('2024-11-30')
+)
+SELECT 
+	organizacao_cod,
+    empresa_nome,
+    banco_id,
+    banco_nome,
+    data_movimento,
+    diferenca_saldo,
+    saldo_inicial,
+    saldo_final
+FROM 
+    UltimoMovimento
+WHERE 
+    row_num = 1 -- Pega apenas o último lançamento por conta e empresa
+ORDER BY 
+    empresa_nome, banco_nome;
+
+/*
+ * Últimos Lançamentos por Empresa e Conta Bancária no Período
+Essa query SQL foi projetada para retornar o último lançamento registrado em cada conta bancária, por empresa, dentro de um período específico. O objetivo é consolidar os dados mais recentes de cada conta por empresa, permitindo análises de saldo e movimentos financeiros no fechamento do mês.
+
+Estrutura da Query
+CTE UltimoMovimento:
+
+Utiliza uma Common Table Expression (CTE) para criar uma base de dados intermediária com os seguintes campos:
+Identificação da empresa:
+Código da organização (organizacao_cod).
+Nome da organização (empresa_nome).
+Identificação da conta bancária:
+Código da conta bancária (banco_id).
+Nome do banco associado à conta (banco_nome).
+Informações financeiras:
+Data do movimento (data_movimento).
+Saldo inicial do movimento (saldo_inicial).
+Saldo final do movimento (saldo_final).
+Diferença de saldo registrada (diferenca_saldo).
+Função ROW_NUMBER():
+
+A função ROW_NUMBER() é usada para numerar os registros em cada partição definida por:
+Código da empresa (ad_org_id).
+Código da conta bancária (c_bankaccount_id).
+Os registros dentro de cada partição são ordenados por:
+Data do movimento (dateacct) em ordem decrescente.
+Data de atualização (updated) em ordem decrescente (para resolver empates).
+Filtro na Seleção Final:
+
+Apenas o último registro de cada conta bancária por empresa é selecionado, utilizando o critério row_num = 1.
+Resultado Final:
+
+Os campos retornados são:
+Código da organização (organizacao_cod).
+Nome da empresa (empresa_nome).
+Código da conta bancária (banco_id).
+Nome do banco associado (banco_nome).
+Data do último movimento (data_movimento).
+Diferença de saldo no último movimento (diferenca_saldo).
+Saldo inicial (saldo_inicial).
+Saldo final (saldo_final).
+Ordenação dos Resultados:
+
+O resultado final é ordenado por:
+Nome da empresa (empresa_nome).
+Nome do banco (banco_nome).
+Cenário de Aplicação
+Finalidade:
+Obter uma visão consolidada do último movimento financeiro registrado em cada conta bancária, por empresa, no período de 1º a 30 de novembro de 2024.
+Facilitar a geração de relatórios financeiros e análise de saldos de fechamento por empresa.
+Benefícios:
+Identificação rápida dos últimos movimentos bancários para reconciliação e auditoria.
+Reduz duplicidade e organiza os dados de maneira hierárquica.
+*/
+
+
