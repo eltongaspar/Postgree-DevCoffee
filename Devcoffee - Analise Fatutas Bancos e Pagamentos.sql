@@ -56,7 +56,8 @@ with
 --##########################################################################################################################################
 --Inicio -
 -- Consulta principal de receita e despesas 
-select cbkl.dateacct as data_pagamento,coalesce(ci.dateinvoiced,cidate.dateinvoiced) as data_emissao,coalesce(cips.duedate,cidate.duedate) as data_vencimento, --datas 
+select 	ao."name",cba."name",cbkl.dateacct,cbkl.trxamt,cbk.beginningbalance,cbk.endingbalance,
+		cbkl.dateacct as data_pagamento,coalesce(ci.dateinvoiced,cidate.dateinvoiced) as data_emissao,coalesce(cips.duedate,cidate.duedate) as data_vencimento, --datas 
 		ao.ad_org_id as organizacao_cod, ao."name" as organizacao_nome, cba.c_bankaccount_id as banco_id , cba."name" as banco_nome, --codigos e nomes
 		cb.c_bpartner_id  as pareceiro_id,cb."name" as parceiro_nome, --cod e nomes 
 		case when (cc.c_elementvalue_id is null and cp.reversal_id is not null) or (cp.docstatus = 'RE') or (cbk.docstatus  = 'RE') or (cp.docstatus = 'RE')
@@ -132,7 +133,7 @@ from c_bankstatementline cbkl
 	--and cp.isreceipt = 'Y'
 	--and cbkl.dateacct between current_date - interval '5 years' AND current_date
 	and cbkl.dateacct  between '2024-11-01' and '2024-11-30'
-order by cb."name";
+order by organizacao_cod,banco_id,data_pagamento;
 --Consulta principal de receita e despesas 
 --Fim
 --##########################################################################################################################################
