@@ -200,6 +200,7 @@ where cbk.dateacct between ('2024-11-01') and ('2024-11-30')
 	order by cbk.ad_org_id,cbk.c_bankaccount_id,cbk.dateacct;
 
 -- Últimos movimentos diários do extrato bancário
+--EXPLAIN (analyze,COSTS,verbose,BUFFERS,format JSON) -- ANALISE QUERY 
 WITH UltimoMovimento AS (
     SELECT 
     	ao.ad_org_id as organizacao_cod,
@@ -292,6 +293,7 @@ Facilita a reconciliação bancária e auditorias.
 
 
 -- Últimos lançamentos por empresa e conta bancária no período
+--EXPLAIN (analyze,COSTS,verbose,BUFFERS,format JSON) -- ANALISE QUERY 
 WITH UltimoMovimento AS (
     SELECT 
     	ao.ad_org_id as organizacao_cod,
