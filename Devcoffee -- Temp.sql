@@ -220,7 +220,7 @@ WITH UltimoMovimento AS (
         LEFT JOIN c_bankaccount cba ON cba.c_bankaccount_id = cbk.c_bankaccount_id -- Contas bancárias
         LEFT JOIN ad_org ao ON ao.ad_org_id = cbk.ad_org_id -- Empresas
     WHERE 
-        cbk.dateacct BETWEEN ('2024-11-01') AND ('2024-11-30')
+        cbk.dateacct BETWEEN ('2024-01-01') AND ('2099-12-31')
 )
 SELECT 
 	organizacao_cod,
@@ -466,7 +466,7 @@ WITH PrimeiroMovimento AS (
         LEFT JOIN c_bankaccount cba ON cba.c_bankaccount_id = cbk.c_bankaccount_id -- Contas bancárias
         LEFT JOIN ad_org ao ON ao.ad_org_id = cbk.ad_org_id -- Empresas
     WHERE 
-        cbk.dateacct BETWEEN ('2024-11-01') AND ('2024-11-30')
+        cbk.dateacct BETWEEN ('2024-01-01') AND ('2099-12-31')	
 ),
 UltimoMovimento AS (
     SELECT 
@@ -486,7 +486,7 @@ UltimoMovimento AS (
         LEFT JOIN c_bankaccount cba ON cba.c_bankaccount_id = cbk.c_bankaccount_id -- Contas bancárias
         LEFT JOIN ad_org ao ON ao.ad_org_id = cbk.ad_org_id -- Empresas
     WHERE 
-        cbk.dateacct BETWEEN ('2024-11-01') AND ('2024-11-30')
+        cbk.dateacct BETWEEN ('2024-01-01') AND ('2099-12-31')
 ),
 Movimentacoes AS (
     SELECT 
@@ -502,7 +502,7 @@ Movimentacoes AS (
         LEFT JOIN c_bankaccount cba ON cba.c_bankaccount_id = cbk.c_bankaccount_id -- Contas bancárias
         LEFT JOIN ad_org ao ON ao.ad_org_id = cbk.ad_org_id -- Empresas
     WHERE 
-        cbk.dateacct BETWEEN ('2024-11-01') AND ('2024-11-30')
+        cbk.dateacct BETWEEN ('2024-01-01') AND ('2099-12-31')
     GROUP BY 
         ao.ad_org_id, ao."name", cbk.c_bankaccount_id, cba."name"
 )

@@ -41,7 +41,7 @@ with
 								as dce_total
 								from c_payment cp
 									left join c_bpartner cb on cb.c_bpartner_id = cp.c_bpartner_id --parceiros
-								where cp.datetrx  between '2024-11-01' and '2024-11-30'
+								--where cp.datetrx  between '2024-11-01' and '2024-11-30'
 								group by cp.c_bpartner_id, cb.name
 								having sum(case 
 												when cp.isreceipt = 'N' and cp.payamt > 0 
@@ -56,7 +56,7 @@ with
 --##########################################################################################################################################
 --Inicio -
 -- Consulta principal de receita e despesas 
-select 	ao."name",cba."name",cbkl.dateacct,cbk.updated,cbkl.c_bankstatementline_id,cbkl.line,cbkl.trxamt,cbk.beginningbalance,cbk.endingbalance,
+select 	--ao."name",cba."name",cbkl.dateacct,cbk.updated,cbkl.c_bankstatementline_id,cbkl.line,cbkl.trxamt,cbk.beginningbalance,cbk.endingbalance,
 		cbkl.dateacct as data_pagamento,coalesce(ci.dateinvoiced,cidate.dateinvoiced) as data_emissao,coalesce(cips.duedate,cidate.duedate) as data_vencimento, --datas 
 		ao.ad_org_id as organizacao_cod, ao."name" as organizacao_nome, cba.c_bankaccount_id as banco_id , cba."name" as banco_nome, --codigos e nomes
 		cb.c_bpartner_id  as pareceiro_id,cb."name" as parceiro_nome, --cod e nomes 
@@ -132,8 +132,8 @@ from c_bankstatementline cbkl
 	and cbk.docstatus in ('CO','CL') --status completo 
 	--and ci.docstatus not in ('RE') --tratatiivas para gerar linhas de devoluções 
 	--and cp.isreceipt = 'Y'
-	--and cbkl.dateacct between current_date - interval '5 years' AND current_date
-	and cbkl.dateacct  between '2024-11-01' and '2024-11-30'
+	and cbkl.dateacct between current_date - interval '5 years' AND current_date
+	--and cbkl.dateacct  between '2024-11-01' and '2024-11-30'
 order by organizacao_cod,banco_id,cbk.dateacct,cbkl.c_bankstatementline_id,cbkl.line;
 --Consulta principal de receita e despesas 
 --Fim
