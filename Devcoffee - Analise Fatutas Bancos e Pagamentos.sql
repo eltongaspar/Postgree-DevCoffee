@@ -56,7 +56,7 @@ with
 --##########################################################################################################################################
 --Inicio -
 -- Consulta principal de receita e despesas 
-select 	ao."name",cba."name",cbkl.dateacct,cbkl.trxamt,cbk.beginningbalance,cbk.endingbalance,
+select 	ao."name",cba."name",cbkl.dateacct,cbk.updated,cbkl.c_bankstatementline_id,cbkl.line,cbkl.trxamt,cbk.beginningbalance,cbk.endingbalance,
 		cbkl.dateacct as data_pagamento,coalesce(ci.dateinvoiced,cidate.dateinvoiced) as data_emissao,coalesce(cips.duedate,cidate.duedate) as data_vencimento, --datas 
 		ao.ad_org_id as organizacao_cod, ao."name" as organizacao_nome, cba.c_bankaccount_id as banco_id , cba."name" as banco_nome, --codigos e nomes
 		cb.c_bpartner_id  as pareceiro_id,cb."name" as parceiro_nome, --cod e nomes 
@@ -104,7 +104,8 @@ select 	ao."name",cba."name",cbkl.dateacct,cbkl.trxamt,cbk.beginningbalance,cbk.
 	 	when  cbkl.trxamt < 0
 	 		then cbkl.trxamt
 	 	else cbkl.trxamt
-	 end as test --analise
+	 end as test, --analise
+	 cbk.updated as data_update
 	 --cp.user1_id,cp.user2_id,ci.user1_id,ci.user2_id,cil.user1_id,cil.user2_id, --validação de centro de custos - usado para analises 
 																--	cilcc.cil_cc,calant.cacicil_cc,cdoc.user1_id,cdoc.user2_id
 from c_bankstatementline cbkl
@@ -133,7 +134,7 @@ from c_bankstatementline cbkl
 	--and cp.isreceipt = 'Y'
 	--and cbkl.dateacct between current_date - interval '5 years' AND current_date
 	and cbkl.dateacct  between '2024-11-01' and '2024-11-30'
-order by organizacao_cod,banco_id,data_pagamento;
+order by organizacao_cod,banco_id,cbk.dateacct,cbkl.c_bankstatementline_id,cbkl.line;
 --Consulta principal de receita e despesas 
 --Fim
 --##########################################################################################################################################
@@ -247,10 +248,6 @@ having sum(case
 			when cp.isreceipt = 'N' and cp.payamt > 0 
 			then cp.payamt else 0 end) 	> 0
 order by cb."name";
---Devoluções cancelamentos e estornos de clientes 
---Pagamentos Cancelamentos, Estornos e Devoluções
---Fim
-/*#####################################################################################################################################################
 
 --Devoluções cancelamentos e estornos de clientes 
 --Pagamentos Cancelamentos, Estornos e Devoluções
