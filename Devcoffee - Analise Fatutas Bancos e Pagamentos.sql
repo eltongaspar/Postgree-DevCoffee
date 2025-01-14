@@ -132,8 +132,8 @@ from c_bankstatementline cbkl
 	and cbk.docstatus in ('CO','CL') --status completo 
 	--and ci.docstatus not in ('RE') --tratatiivas para gerar linhas de devoluções 
 	--and cp.isreceipt = 'Y'
-	and cbkl.dateacct between current_date - interval '5 years' AND current_date
-	--and cbkl.dateacct  between '2024-11-01' and '2024-11-30'
+	--and cbkl.dateacct between current_date - interval '5 years' AND current_date
+	and cbkl.dateacct  between '2024-01-01' and '2099-12-31'
 order by organizacao_cod,banco_id,cbk.dateacct,cbkl.c_bankstatementline_id,cbkl.line;
 --Consulta principal de receita e despesas 
 --Fim
