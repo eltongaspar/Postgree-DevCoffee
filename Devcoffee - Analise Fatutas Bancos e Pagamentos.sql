@@ -108,7 +108,7 @@ select 	--ao."name",cba."name",cbkl.dateacct,cbk.updated,cbkl.c_bankstatementlin
 	 	else cbkl.trxamt
 	 end as test, --analise
 	 cbk.updated as data_update,
-	 c_bankstatementline_id as linha_id
+	 cbk.c_bankstatement_id as linha_id
 	 --cp.user1_id,cp.user2_id,ci.user1_id,ci.user2_id,cil.user1_id,cil.user2_id, --validação de centro de custos - usado para analises 
 																--	cilcc.cil_cc,calant.cacicil_cc,cdoc.user1_id,cdoc.user2_id
 from c_bankstatementline cbkl
@@ -137,7 +137,7 @@ from c_bankstatementline cbkl
 	--and cp.isreceipt = 'Y'
 	--and cbkl.dateacct between current_date - interval '5 years' AND current_date
 	and cbkl.dateacct  between '2024-01-01' and '2099-12-31'
-order by organizacao_cod,banco_id,cbk.dateacct,cbkl.c_bankstatementline_id,cbkl.line;
+order by organizacao_cod,banco_id,cbk.dateacct,cbk.c_bankstatement_id;
 --Consulta principal de receita e despesas 
 --Fim
 --##########################################################################################################################################

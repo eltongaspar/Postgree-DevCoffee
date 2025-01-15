@@ -1,6 +1,117 @@
 -- Empresas 
 select * from ad_org ao ;
 
+-- Extrato bancario 
+select 
+	cba."name" ,
+* from c_bankstatement cbk 
+	--left join c_bankstatementline cbkl on cbk.c_bankstatement_id = cbkl.c_bankstatement_id
+	left join c_bankaccount cba on cba.c_bankaccount_id = cbk.c_bankaccount_id 
+	where cbk.ad_client_id = 5000017 -- codigo cliente 
+	and cbk.ad_org_id  = 5000050 -- codigo empresa
+	and cbk.c_bankaccount_id = 5000220 -- bancos
+	and cbk.isactive  = 'Y' --registro ativo
+	and cbk.docstatus  in ('CO','CL')
+	and cbk.statementdate between '2024-01-01' and '2024-01-31' --datas
+	order by cbk.c_bankstatement_id  ;
+
+
+--Somas 
+-- Soma
+--Extrato bancario linhas e demais  Joins 
+select 
+	SUM(cbkl.trxamt) AS Geral, -- Soma geral de todas as transações
+    SUM(CASE WHEN cbkl.trxamt > 0 THEN cbkl.trxamt ELSE 0 END) AS Receita, -- Soma apenas dos valores positivos
+    SUM(CASE WHEN cbkl.trxamt < 0 THEN cbkl.trxamt ELSE 0 END) AS Despesas -- Soma apenas dos valores negativos
+from c_bankstatementline cbkl --extrato bancario linhas
+	--left join c_payment cp on cp.c_payment_id  = cbkl.c_payment_id --pagamentos 
+	left join c_bankstatement cbk on cbk.c_bankstatement_id = cbkl.c_bankstatement_id --extrato bancario 
+	--left join c_bankaccount cba on cba.c_bankaccount_id = cbk.c_bankaccount_id --bancos 
+	--left join c_invoice ci on ci.c_invoice_id = cbkl.c_invoice_id --faturas
+	--left join ad_org ao on ao.ad_org_id  = ci.ad_org_id -- empresas 
+	--left join c_bpartner cb on cb.c_bpartner_id = ci.c_bpartner_id --parceiros
+	--left join c_elementvalue cc on cc.c_elementvalue_id = ci.user1_id  --centro de custo
+	--left join c_invoicepayschedule cips on ci.c_invoice_id = cips.c_invoice_id -- agendamentos de pagamentos 
+	--left join c_doctype cdoc on cdoc.c_doctype_id  = cp.c_doctype_id --tipod de documentos
+	--left join c_invoiceline cil on cil.c_invoice_id = ci.c_invoice_id --Itens da Fatura
+where cbkl.ad_client_id = 5000017
+	and cbkl.ad_org_id  = 5000050 -- codigo empresa
+	and cbk.c_bankaccount_id = 5000220 -- bancos
+	and cbkl.isactive  = 'Y' --registro ativo
+	--and cbkl.trxamt < 0 --movimentos negativos pagamentos 
+	and cbkl.dateacct between '2024-01-01' and '2024-01-31' --intervalos de datas
+	--and cp.docstatus = 'CO' --vefica se o documento não foi estornado, na linha da conta bancaria não temos essa informação 
+	--and cbkl.description is null  --titulos estornados tem esse campo = null 
+	--and ci.issotrx  = 'N' -- N = contas a pagar
+	--and ci.isactive  = 'Y' --registroo ativo 
+	--and ci.ispaid  = 'Y' -- confirmação DE pagamento de titulo 
+	--and ci.grandtotal  > 0 -- valores naiores que o 
+	--and ci.updated between '2024-11-01' and '2024-11-30' --data da ultima alteração do titulo 
+	--and ci.c_payment_id  is not null --validacao pagamento pelo id
+	--and ci.ispayschedulevalid = 'Y' --validacao schedule
+	--and ci.docstatus = 'CO' -- status documento completos 
+	--and cips.dueamt > 0 --valores maiord que 0 
+	--and cips.isactive = 'Y' -- registro ativo
+	--and cips.ispaid  = 'Y' -- titulo pago 
+	--and cips.duedate between '2024-11-01' and '2024-11-30' -- data de pagamento ou agendamento
+	--and cp.isactive = 'Y' --registros ativos 
+	--and cp.isreceipt  = 'N' --tipo de transação receita ou despesa 
+	--and cp.isreconciled  = 'Y' -- conciliação bancária
+	--and cp.c_invoice_id is not null --valida se titulos tem faturas
+	--and cp.docstatus  = 'CO'--documentos com status completo 
+	--and cp.dateacct  between '2024-11-01' and '2024-11-30'	 --data efetiva do pagamento
+	--and cdoc.c_doctype_id not in (5002295,5002296,5002339);
+
+--Extrato bancario linhas - Soma
+select
+	SUM(cbkl.trxamt) AS Geral, -- Soma geral de todas as transações
+    SUM(CASE WHEN cbkl.trxamt > 0 THEN cbkl.trxamt ELSE 0 END) AS Receita, -- Soma apenas dos valores positivos
+    SUM(CASE WHEN cbkl.trxamt < 0 THEN cbkl.trxamt ELSE 0 END) AS Despesas -- Soma apenas dos valores negativos
+from c_bankstatementline cbkl
+	--left join c_payment cp on cp.c_payment_id  = cbkl.c_payment_id --pagamentos
+	left join c_bankstatement cbk on cbk.c_bankstatement_id = cbkl.c_bankstatement_id --extrato bancario 
+	--left join c_doctype cdoc on cdoc.c_doctype_id  = cbk.c_doctype_id --tipod de documentos
+	where cbkl.ad_client_id = 5000017
+	and cbkl.ad_org_id  = 5000050 -- codigo empresa
+	and cbk.c_bankaccount_id In (5000220) -- bancos 5000392
+	and cbkl.isactive  = 'Y' --registro ativo
+	--and cp.docstatus not in ('RE') --titulos estornados na cp payment
+	and cbkl.dateacct between '2024-01-01' and '2024-01-31';
+	--and cbkl.trxamt > 0 --movimentos negativos pagamentos 
+	--and cp.user1_id  not in (5041412)
+	--and cbkl.c_bpartner_id in (5056231)
+	 --intervalos de datas
+	--and cbkl.description  is null
+	--and cp.c_doctype_id not in(5002296,5002295)
+	--and cp.docstatus  = 'CO'
+	--and cp.c_charge_id > 0::numeric
+	--and cp.docstatus in ('CO','CL');
+
+--Extrato bancario cabecalho -- Soma	
+select 
+	SUM(cbk.statementdifference) AS Geral, -- Soma geral de todas as transações
+    SUM(CASE WHEN cbk.statementdifference > 0 THEN cbk.statementdifference ELSE 0 END) AS Receita_Dif, -- Soma apenas dos valores positivos
+    SUM(CASE WHEN cbk.statementdifference < 0 THEN cbk.statementdifference ELSE 0 END) AS Despesas_Dif, -- Soma apenas dos valores negativos
+    SUM(CASE WHEN cbk.beginningbalance > 0 THEN cbk.beginningbalance ELSE 0 END) as Inicial_Pos, -- saldos iniciais 
+    SUM(CASE WHEN cbk.beginningbalance < 0 THEN cbk.beginningbalance ELSE 0 END) as Inicial_Neg, -- saldos iniciais 
+    SUM(CASE WHEN cbk.endingbalance > 0 THEN cbk.endingbalance ELSE 0 END) as Final_Pos, -- saldos fim 
+    SUM(CASE WHEN cbk.endingbalance < 0 THEN cbk.endingbalance ELSE 0 END) as Final_Neg, -- saldos fim 
+    SUM(CASE WHEN cbk.beginningbalance + cbk.endingbalance > 0 THEN cbk.endingbalance ELSE 0 END) as Saldo -- saldos iniciais - finais 
+from c_bankstatement cbk 
+	--left join c_bankstatementline cbkl on cbk.c_bankstatement_id = cbkl.c_bankstatement_id --extrato vancario linhas
+	left join c_bankaccount cba on cba.c_bankaccount_id = cbk.c_bankaccount_id --bancos 
+	--left join c_bankstatementline cbkl on cbkl.c_bankstatement_id = cbkl.c_bankstatement_id --extrato bancario 
+	where cbk.ad_client_id = 5000017
+	and cbk.ad_org_id  = 5000050 -- codigo empresa
+	and cbk.c_bankaccount_id = 5000220 -- bancos
+	and cbk.isactive  = 'Y' --registro ativo
+	and cbk.isactive  = 'Y' --registro ativo
+	and cbk.docstatus  in ('CO','CL')
+	and cbk.statementdate between '2024-01-01' and '2024-01-31' --datas;
+
+
+
+
 -- Faturas a pagar 
 select ci.ad_org_id , ao."name", ci.c_bpartner_id, cb."name" ,
 ci.grandtotal, ci.c_invoice_id ,ci.documentno,
@@ -204,19 +315,6 @@ select * from c_elementvalue_trl cet;
 select * from c_bankaccount cb 
 where ad_org_id  = 5000047;
 
--- Extrato bancario 
-select 
-	cba."name" ,
-* from c_bankstatement cbk 
-	--left join c_bankstatementline cbkl on cbk.c_bankstatement_id = cbkl.c_bankstatement_id
-	left join c_bankaccount cba on cba.c_bankaccount_id = cbk.c_bankaccount_id 
-	where cbk.ad_client_id = 5000017 -- codigo cliente 
-	and cbk.ad_org_id  = 5000047 -- codigo empresa
-	and cbk.c_bankaccount_id = 5000392 -- bancos
-	and cbk.isactive  = 'Y' --registro ativo
-	and cbk.docstatus  in ('CO','CL')
-	and cbk.statementdate between '2024-11-01' and '2024-11-30' --datas
-	order by cbk.created ;
 
 --Extrato bancario linhas em produção 
 with
@@ -282,57 +380,7 @@ select
 	--and cbkl.c_bpartner_id = 5056231
 	--and cp.c_charge_id > 0::numeric
 
-
-select * from c_bankaccount
-
---Extrato bancario cabecalho -- Soma	
-select 
-	SUM(cbk.statementdifference) AS Geral, -- Soma geral de todas as transações
-    SUM(CASE WHEN cbk.statementdifference > 0 THEN cbk.statementdifference ELSE 0 END) AS Receita_Dif, -- Soma apenas dos valores positivos
-    SUM(CASE WHEN cbk.statementdifference < 0 THEN cbk.statementdifference ELSE 0 END) AS Despesas_Dif, -- Soma apenas dos valores negativos
-    SUM(CASE WHEN cbk.beginningbalance > 0 THEN cbk.beginningbalance ELSE 0 END) as Inicial_Pos, -- saldos iniciais 
-    SUM(CASE WHEN cbk.beginningbalance < 0 THEN cbk.beginningbalance ELSE 0 END) as Inicial_Neg, -- saldos iniciais 
-    SUM(CASE WHEN cbk.endingbalance > 0 THEN cbk.endingbalance ELSE 0 END) as Final_Pos, -- saldos fim 
-    SUM(CASE WHEN cbk.endingbalance < 0 THEN cbk.endingbalance ELSE 0 END) as Final_Neg, -- saldos fim 
-    SUM(CASE WHEN cbk.beginningbalance + cbk.endingbalance > 0 THEN cbk.endingbalance ELSE 0 END) as Saldo -- saldos iniciais - finais 
-from c_bankstatement cbk 
-	--left join c_bankstatementline cbkl on cbk.c_bankstatement_id = cbkl.c_bankstatement_id --extrato vancario linhas
-	left join c_bankaccount cba on cba.c_bankaccount_id = cbk.c_bankaccount_id --bancos 
-	--left join c_bankstatementline cbkl on cbkl.c_bankstatement_id = cbkl.c_bankstatement_id --extrato bancario 
-	where cbk.ad_client_id = 5000017
-	and cbk.ad_org_id  = 5000047 -- codigo empresa
-	and cbk.c_bankaccount_id = 5000392 -- bancos
-	and cbk.isactive  = 'Y' --registro ativo
-	--and cbk.docstatus  = 'CO'
-	and cbk.statementdate between '2024-11-01' and '2024-11-30' --datas;
-
---Extrato bancario linhas - Soma
-select
-	SUM(cbkl.trxamt) AS Geral, -- Soma geral de todas as transações
-    SUM(CASE WHEN cbkl.trxamt > 0 THEN cbkl.trxamt ELSE 0 END) AS Receita, -- Soma apenas dos valores positivos
-    SUM(CASE WHEN cbkl.trxamt < 0 THEN cbkl.trxamt ELSE 0 END) AS Despesas -- Soma apenas dos valores negativos
-from c_bankstatementline cbkl
-	--left join c_payment cp on cp.c_payment_id  = cbkl.c_payment_id --pagamentos
-	left join c_bankstatement cbk on cbk.c_bankstatement_id = cbkl.c_bankstatement_id --extrato bancario 
-	--left join c_doctype cdoc on cdoc.c_doctype_id  = cbk.c_doctype_id --tipod de documentos
-	where cbkl.ad_client_id = 5000017
-	and cbkl.ad_org_id  = 5000047 -- codigo empresa
-	and cbk.c_bankaccount_id In (5000219) -- bancos 5000392
-	and cbkl.isactive  = 'Y' --registro ativo
-	--and cp.docstatus not in ('RE') --titulos estornados na cp payment
-	and cbkl.dateacct between '2024-11-01' and '2024-11-30';
-	--and cbkl.trxamt > 0 --movimentos negativos pagamentos 
-	--and cp.user1_id  not in (5041412)
-	--and cbkl.c_bpartner_id in (5056231)
-	 --intervalos de datas
-	--and cbkl.description  is null
-	--and cp.c_doctype_id not in(5002296,5002295)
-	--and cp.docstatus  = 'CO'
-	--and cp.c_charge_id > 0::numeric
-	--and cp.docstatus in ('CO','CL');
 	
-	--order by cbkl.c_bankstatementline_id,cbkl.line ;
-
 -- Pagamentos -- Soma 
 select
 	SUM(cp.payamt) AS Geral, -- Soma geral de todas as transações
@@ -421,13 +469,13 @@ select
 	left join c_elementvalue cc on cc.c_elementvalue_id = coalesce(cp.user1_id, ci.user1_id, cil.cil_cc,cal.cacicil_cc,0)  --centro de custo
 	left join ci_temp cical on cical.c_payment_id = cbkl.c_payment_id -- Faturas pagas com credito antecioado
 where cbkl.ad_client_id = 5000017
-	--and cbkl.ad_org_id  = 5000047 -- codigo empresa
-	and cbk.c_bankaccount_id = 5000219 -- bancos
+	and cbkl.ad_org_id  = 5000050 -- codigo empresa
+	and cbk.c_bankaccount_id = 5000220 -- bancos
 	--and cbkl.c_bpartner_id  = 5055671
 	and cbkl.isactive  = 'Y' --registro ativo
 	--and cp.c_doctype_id  in (5002294,5002293)
 	--and cbkl.trxamt < 0 --movimentos negativos pagamentos 
-	and cbkl.dateacct between '2024-11-01' and '2024-11-30' --intervalos de datas
+	and cbkl.dateacct between '2024-01-01' and '2024-01-31' --intervalos de datas
 	--and cp.docstatus = 'CO' --vefica se o documento não foi estornado, na linha da conta bancaria não temos essa informação 
 	--and cbkl.description is null  --titulos estornados tem esse campo = null 
 	--and ci.issotrx  = 'N' -- N = contas a pagar
@@ -451,55 +499,6 @@ where cbkl.ad_client_id = 5000017
 	--and cdoc.c_doctype_id not in (5002295,5002296) --tipos de documentos 
 order by cbkl.c_bankstatementline_id ;
 
--- Soma
---Extrato bancario linhas e demais  Joins 
-select 
-	SUM(cbkl.trxamt) AS Geral, -- Soma geral de todas as transações
-    SUM(CASE WHEN cbkl.trxamt > 0 THEN cbkl.trxamt ELSE 0 END) AS Receita, -- Soma apenas dos valores positivos
-    SUM(CASE WHEN cbkl.trxamt < 0 THEN cbkl.trxamt ELSE 0 END) AS Despesas -- Soma apenas dos valores negativos
-from c_bankstatementline cbkl --extrato bancario linhas
-	--left join c_payment cp on cp.c_payment_id  = cbkl.c_payment_id --pagamentos 
-	--left join c_bankstatement cbk on cbk.c_bankstatement_id = cbkl.c_bankstatement_id --extrato bancario 
-	--left join c_bankaccount cba on cba.c_bankaccount_id = cbk.c_bankaccount_id --bancos 
-	--left join c_invoice ci on ci.c_invoice_id = cbkl.c_invoice_id --faturas
-	--left join ad_org ao on ao.ad_org_id  = ci.ad_org_id -- empresas 
-	--left join c_bpartner cb on cb.c_bpartner_id = ci.c_bpartner_id --parceiros
-	--left join c_elementvalue cc on cc.c_elementvalue_id = ci.user1_id  --centro de custo
-	--left join c_invoicepayschedule cips on ci.c_invoice_id = cips.c_invoice_id -- agendamentos de pagamentos 
-	--left join c_doctype cdoc on cdoc.c_doctype_id  = cp.c_doctype_id --tipod de documentos
-	--left join c_invoiceline cil on cil.c_invoice_id = ci.c_invoice_id --Itens da Fatura
-where cbkl.ad_client_id = 5000017
-	and cbkl.ad_org_id  = 5000047 -- codigo empresa
-	--and cbk.c_bankaccount_id = 5000219 -- bancos
-	and cbkl.isactive  = 'Y' --registro ativo
-	--and cbkl.trxamt < 0 --movimentos negativos pagamentos 
-	and cbkl.dateacct between '2024-11-01' and '2024-11-30' --intervalos de datas
-	--and cp.docstatus = 'CO' --vefica se o documento não foi estornado, na linha da conta bancaria não temos essa informação 
-	--and cbkl.description is null  --titulos estornados tem esse campo = null 
-	--and ci.issotrx  = 'N' -- N = contas a pagar
-	--and ci.isactive  = 'Y' --registroo ativo 
-	--and ci.ispaid  = 'Y' -- confirmação DE pagamento de titulo 
-	--and ci.grandtotal  > 0 -- valores naiores que o 
-	--and ci.updated between '2024-11-01' and '2024-11-30' --data da ultima alteração do titulo 
-	--and ci.c_payment_id  is not null --validacao pagamento pelo id
-	--and ci.ispayschedulevalid = 'Y' --validacao schedule
-	--and ci.docstatus = 'CO' -- status documento completos 
-	--and cips.dueamt > 0 --valores maiord que 0 
-	--and cips.isactive = 'Y' -- registro ativo
-	--and cips.ispaid  = 'Y' -- titulo pago 
-	--and cips.duedate between '2024-11-01' and '2024-11-30' -- data de pagamento ou agendamento
-	--and cp.isactive = 'Y' --registros ativos 
-	--and cp.isreceipt  = 'N' --tipo de transação receita ou despesa 
-	--and cp.isreconciled  = 'Y' -- conciliação bancária
-	--and cp.c_invoice_id is not null --valida se titulos tem faturas
-	--and cp.docstatus  = 'CO'--documentos com status completo 
-	--and cp.dateacct  between '2024-11-01' and '2024-11-30'	 --data efetiva do pagamento
-	--and cdoc.c_doctype_id not in (5002295,5002296,5002339);
 
- --Tipos de documento   
---5002295
---5002296
---5002339
---5002344*
 
 
