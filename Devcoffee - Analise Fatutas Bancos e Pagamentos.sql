@@ -87,6 +87,8 @@ select 	--ao."name",cba."name",cbkl.dateacct,cbk.updated,cbkl.c_bankstatementlin
 	 cdoc.c_doctype_id as dooc_id ,cdoc."name" as doc_nome, --tippos docs
 	 cbkl.trxamt as valor, --valor 
 	 cbk.beginningbalance as saldo_inicial , cbk.endingbalance as saldo_final, --saldos de bancos 
+	 cbk.endingbalance - cbk.beginningbalance as saldo_fim_inicial,
+	 cbk.endingbalance - cbkl.trxamt as saldo_valor_mov,	 
 	 cp.isreceipt as movimento_id, --receita Y N despesa
 	 case when cbkl.trxamt > 0 then 'Entrada'
 	 		when cbkl.trxamt < 0 then 'Saida'
