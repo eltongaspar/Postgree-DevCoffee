@@ -5,14 +5,15 @@ select * from ad_org ao ;
 select 
 	cba."name" ,
 * from c_bankstatement cbk 
-	--left join c_bankstatementline cbkl on cbk.c_bankstatement_id = cbkl.c_bankstatement_id
+	left join c_bankstatementline cbkl on cbk.c_bankstatement_id = cbkl.c_bankstatement_id
 	left join c_bankaccount cba on cba.c_bankaccount_id = cbk.c_bankaccount_id 
 	where cbk.ad_client_id = 5000017 -- codigo cliente 
 	and cbk.ad_org_id  = 5000050 -- codigo empresa
 	and cbk.c_bankaccount_id = 5000220 -- bancos
 	and cbk.isactive  = 'Y' --registro ativo
 	and cbk.docstatus  in ('CO','CL')
-	and cbk.statementdate between '2024-01-01' and '2024-01-31' --datas
+	--and cbk.statementdate between '2024-01-01' and '2024-01-31' --datas
+	and cbk.c_bankstatement_id = 5012848
 	order by cbk.c_bankstatement_id  ;
 
 
