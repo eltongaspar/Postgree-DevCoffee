@@ -10,6 +10,11 @@ where cdoc.c_doctype_id in (5002294,5002293,50023380,5002255);
 --cdoc.user1_id  is not null 
 	--or cdoc.user2_id  is not null ;
 
+--contas bancarias 
+select cba.ad_org_id as organizacao_id,ao.name as organizacao_nome,cba.c_bankaccount_id as banco_id,cba.name as banco_nome
+from c_bankaccount cba
+	left join ad_org ao on cba.ad_org_id = ao.ad_org_id;
+
 --centro de custos --exclusao da visao de bi
 select cc.c_elementvalue_id ,cc."name" ,cc.value
 from c_elementvalue cc 
@@ -292,66 +297,7 @@ Identifica rapidamente os saldos de fechamento de cada dia por conta e empresa.
 Facilita a reconciliação bancária e auditorias.
 */
 
--- Primeiros e Últimos saldos por conta bancária e empresa no período
-WITH PrimeiroMovimento AS (
-    SELECT 
-        ao.ad_org_id AS organizacao_cod,
-        ao."name" AS empresa_nome,
-        cbk.c_bankaccount_id AS banco_id,
-        cba."name" AS banco_nome,
-        cbk.dateacct AS data_movimento,
-        cbk.beginningbalance AS saldo_inicial,
-        cbk.endingbalance AS saldo_final,
-        ROW_NUMBER() OVER (
-            PARTITION BY cbk.ad_org_id, cbk.c_bankaccount_id -- Particiona por empresa e conta
-            ORDER BY cbk.dateacct ASC, cbk.updated ASC -- Ordena para pegar o primeiro registro
-        ) AS row_num
-    FROM 
-        c_bankstatement cbk
-        LEFT JOIN c_bankaccount cba ON cba.c_bankaccount_id = cbk.c_bankaccount_id -- Contas bancárias
-        LEFT JOIN ad_org ao ON ao.ad_org_id = cbk.ad_org_id -- Empresas
-    WHERE 
-        cbk.dateacct BETWEEN ('2024-11-01') AND ('2024-11-30')
-),
-UltimoMovimento AS (
-    SELECT 
-        ao.ad_org_id AS organizacao_cod,
-        ao."name" AS empresa_nome,
-        cbk.c_bankaccount_id AS banco_id,
-        cba."name" AS banco_nome,
-        cbk.dateacct AS data_movimento,
-        cbk.beginningbalance AS saldo_inicial,
-        cbk.endingbalance AS saldo_final,
-        ROW_NUMBER() OVER (
-            PARTITION BY cbk.ad_org_id, cbk.c_bankaccount_id -- Particiona por empresa e conta
-            ORDER BY cbk.dateacct DESC, cbk.updated DESC -- Ordena para pegar o último registro
-        ) AS row_num
-    FROM 
-        c_bankstatement cbk
-        LEFT JOIN c_bankaccount cba ON cba.c_bankaccount_id = cbk.c_bankaccount_id -- Contas bancárias
-        LEFT JOIN ad_org ao ON ao.ad_org_id = cbk.ad_org_id -- Empresas
-    WHERE 
-        cbk.dateacct BETWEEN ('2024-11-01') AND ('2024-11-30')
-)
-SELECT 
-    p.organizacao_cod,
-    p.empresa_nome,
-    p.banco_id,
-    p.banco_nome,
-    p.data_movimento AS primeiro_dia,
-    p.saldo_inicial AS saldo_inicial_primeiro_dia,
-    u.data_movimento AS ultimo_dia,
-    u.saldo_final AS saldo_final_ultimo_dia
-FROM 
-    PrimeiroMovimento p
-    JOIN UltimoMovimento u
-    ON p.organizacao_cod = u.organizacao_cod 
-       AND p.banco_id = u.banco_id
-WHERE 
-    p.row_num = 1 -- Primeiro movimento
-    AND u.row_num = 1 -- Último movimento
-ORDER BY 
-    p.empresa_nome, p.banco_nome;
+
 
 -- Saldos e somatório de movimentações por conta bancária e empresa no período
 WITH PrimeiroMovimento AS (
