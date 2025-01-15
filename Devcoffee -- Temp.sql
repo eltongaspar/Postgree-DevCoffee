@@ -69,7 +69,7 @@ where cbkl.dateacct between '2024-11-01' and '2024-11-30'
  
  -- Extrato 
 select cba.c_bankaccount_id as banco_id , cba."name" as banco_nome,cbk.statementdate ,
-	cbk.beginningbalance,cbk.endingbalance,cbk.statementdifference
+	cbk.beginningbalance,cbk.endingbalance,cbk.statementdifference,*
 from c_bankstatement cbk
 	left join c_bankstatementline cbkl on cbkl.c_bankstatement_id = cbk.c_bankstatement_id 
 	left join c_bankaccount cba on cba.c_bankaccount_id = cbk.c_bankaccount_id --contas bancarias
