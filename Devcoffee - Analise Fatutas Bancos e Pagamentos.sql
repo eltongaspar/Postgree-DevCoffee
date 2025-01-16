@@ -86,9 +86,7 @@ select 	--ao."name",cba."name",cbkl.dateacct,cbk.updated,cbkl.c_bankstatementlin
 		end as Valid_Antecipacao,--validação de pagamentos e recebimentos antecipados
 	 cdoc.c_doctype_id as dooc_id ,cdoc."name" as doc_nome, --tippos docs
 	 cbkl.trxamt as valor, --valor 
-	 cbk.beginningbalance as saldo_inicial , cbk.endingbalance as saldo_final, --saldos de bancos 
-	 cbk.endingbalance - cbk.beginningbalance as saldo_fim_inicial,
-	 cbk.endingbalance - cbkl.trxamt as saldo_valor_mov,	 
+	 cbk.beginningbalance as saldo_inicial , cbk.endingbalance as saldo_final, --saldos de bancos  
 	 cp.isreceipt as movimento_id, --receita Y N despesa
 	 case when cbkl.trxamt > 0 then 'Entrada'
 	 		when cbkl.trxamt < 0 then 'Saida'
@@ -108,7 +106,7 @@ select 	--ao."name",cba."name",cbkl.dateacct,cbk.updated,cbkl.c_bankstatementlin
 	 	else cbkl.trxamt
 	 end as test, --analise
 	 cbk.updated as data_update,
-	 CONCAT(CAST(cbkl.dateacct AS TEXT), CAST(cbkl.c_bankstatementline_id AS TEXT)) AS linha_id
+	 CONCAT(CAST(cbkl.dateacct AS TEXT), CAST(cbkl.c_bankstatementline_id AS TEXT)) AS orderby
 	 --cp.user1_id,cp.user2_id,ci.user1_id,ci.user2_id,cil.user1_id,cil.user2_id, --validação de centro de custos - usado para analises 
 																--	cilcc.cil_cc,calant.cacicil_cc,cdoc.user1_id,cdoc.user2_id
 from c_bankstatementline cbkl
@@ -137,10 +135,11 @@ from c_bankstatementline cbkl
 	--and cp.isreceipt = 'Y'
 	--and cbkl.dateacct between current_date - interval '5 years' AND current_date
 	and cbkl.dateacct  between '2024-01-01' and '2099-12-31'
-order by organizacao_cod,banco_id,cbk.dateacct,cbk.c_bankstatement_id;
+order by organizacao_cod,banco_id,orderby
 --Consulta principal de receita e despesas 
 --Fim
 --##########################################################################################################################################
+
 
 --##########################################################################################################################################
 --Inicio
