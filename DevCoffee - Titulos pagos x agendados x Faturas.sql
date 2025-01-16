@@ -12,9 +12,21 @@ select
 	and cbk.c_bankaccount_id = 5000220 -- bancos
 	and cbk.isactive  = 'Y' --registro ativo
 	and cbk.docstatus  in ('CO','CL')
-	--and cbk.statementdate between '2024-01-01' and '2024-01-31' --datas
-	and cbk.c_bankstatement_id = 5012848
+	and cbk.statementdate between '2024-01-01' and '2024-01-31' --datas
+	--and cbk.c_bankstatement_id = 5012848
 	order by cbk.c_bankstatement_id  ;
+
+--Extrato linhas
+select cbkl.ad_org_id ,cbkl.c_payment_id ,cbkl.c_invoice_id ,cbkl.trxamt,
+* from c_bankstatementline cbkl
+	left join c_bankstatement cbk on cbk.c_bankstatement_id = cbkl.c_bankstatement_id --extrato bancario 
+where cbkl.dateacct between '2024-01-01' and '2024-01-31'
+	and cbkl.isactive  = 'Y' --registro ativo
+	and cbkl.ad_org_id = 5000050 -- organizacao
+	and cbkl.ad_org_id  = 5000050 -- codigo empresa
+	and cbk.c_bankaccount_id = 5000220 -- bancos
+	--and cbkl.c_bpartner_id  = 5151800;
+ 
 
 
 --Somas 
