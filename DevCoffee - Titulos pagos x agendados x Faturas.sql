@@ -569,10 +569,9 @@ with
 --##########################################################################################################################################
 --Inicio -
 -- Consulta principal de receita e despesas 
-select 	*
-		--ao."name",cba."name",cbkl.dateacct,cbk.updated,cbkl.c_bankstatementline_id,cbkl.line,cbkl.trxamt,cbk.beginningbalance,cbk.endingbalance
-		--cbkl.dateacct as data_pagamento,coalesce(ci.dateinvoiced,cidate.dateinvoiced) as data_emissao,coalesce(cips.duedate,cidate.duedate) as data_vencimento --datas 
-		/*ao.ad_org_id as organizacao_cod, ao."name" as organizacao_nome, cba.c_bankaccount_id as banco_id , cba."name" as banco_nome, --codigos e nomes
+select ao."name",cba."name",cbkl.dateacct,cbk.updated,cbkl.c_bankstatementline_id,cbkl.line,cbkl.trxamt,cbk.beginningbalance,cbk.endingbalance,
+		cbkl.dateacct as data_pagamento,coalesce(ci.dateinvoiced,cidate.dateinvoiced) as data_emissao,coalesce(cips.duedate,cidate.duedate) as data_vencimento, --datas 
+		ao.ad_org_id as organizacao_cod, ao."name" as organizacao_nome, cba.c_bankaccount_id as banco_id , cba."name" as banco_nome, --codigos e nomes
 		cb.c_bpartner_id  as pareceiro_id,cb."name" as parceiro_nome, --cod e nomes 
 		case when (cc.c_elementvalue_id is null and cp.reversal_id is not null) or (cp.docstatus = 'RE') or (cbk.docstatus  = 'RE') or (cp.docstatus = 'RE')
 						or (cbkl.description like ('%^%') or cbkl.description like ('%<%') or cbkl.description like ('%>%'))
@@ -620,7 +619,7 @@ select 	*
 	 	else cbkl.trxamt
 	 end as test, --analise
 	 cbk.updated as data_update,
-	 CONCAT(CAST(cbkl.dateacct AS TEXT), CAST(cbkl.c_bankstatementline_id AS TEXT)) AS orderby,*
+	 CONCAT(CAST(cbkl.dateacct AS TEXT), CAST(cbkl.c_bankstatementline_id AS TEXT)) AS orderby
 	 --cp.user1_id,cp.user2_id,ci.user1_id,ci.user2_id,cil.user1_id,cil.user2_id, --validação de centro de custos - usado para analises 
 																--	cilcc.cil_cc,calant.cacicil_cc,cdoc.user1_id,cdoc.user2_id*/
 from c_bankstatementline cbkl
@@ -645,12 +644,11 @@ from c_bankstatementline cbkl
 where cbkl.dateacct between '2024-02-01' and '2024-02-29'
 	and cbkl.isactive  = 'Y' --registro ativo
 	and cbkl.ad_org_id = 5000050 -- organizacao
-	--and cbk.c_bankaccount_id = 5000220 -- bancos
-	and cbkl.c_bpartner_id = 5069078
-	and cbkl.trxamt  = 2119.14;
+	and cbk.c_bankaccount_id = 5000220 -- bancos
+	--and cbkl.c_bpartner_id = 5069078
+	--and cbkl.trxamt  = 2119.14;
 	--and cbkl.c_bpartner_id  = 5151800;
- 
---order by organizacao_cod,banco_id,orderby
+ order by organizacao_cod,banco_id,orderby;
 --Consulta principal de receita e despesas 
 --Fim
 --##########################################################################################################################################
