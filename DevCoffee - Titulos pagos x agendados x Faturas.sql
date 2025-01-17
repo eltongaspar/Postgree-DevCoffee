@@ -27,7 +27,6 @@ where cbkl.dateacct between '2024-02-01' and '2024-02-29'
 	--and cbkl.c_bpartner_id  = 5151800;
  
 
-
 --Somas 
 -- Soma
 --Extrato bancario linhas e demais  Joins 
@@ -172,32 +171,33 @@ select cp.c_charge_id,cp.isreceipt ,cb."name" , cp.c_doctype_id , cdoc."name" , 
 	left join c_elementvalue cc on cc.c_elementvalue_id = cp.user1_id --cc
 	left join c_elementvalue cccp on cccp.c_elementvalue_id = ci.user1_id --cc titulos 
 where cp.ad_client_id = 5000017
-	--and cp.ad_org_id  = 5000049 -- codigo empresa 
-	--and cp.c_payment_id  in (5378751,5379173,5381920)
+	and cp.c_bpartner_id  = 5069078 -- codigo empresa 
+	--and cp.payamt in (2119.14)
 	and cp.isactive = 'Y' --registros ativos 
-	and cp.c_charge_id is not null
+	--and cp.c_charge_id is not null
 	--and cp.isreceipt  = 'Y' --tipo de transação receita ou despesa 
 	and cp.isreconciled  = 'Y' -- conciliação bancária
 	--and cp.c_invoice_id is not null --valida se titulos tem faturas
 	and cp.docstatus  In ('CO','CL')--documentos com status completo 
 	--and cp.payamt  < 0 
-	and cp.dateacct  between '2024-11-01' and '2024-11-30'
+	and cp.dateacct  between '2024-01-01' and '2024-11-30'
 	--and cp.c_doctype_id not in (5002295,5002296,5002339)
 order by cp.c_doctype_id , cdoc."name";
 	
 --Alocação de pagamentos 
 select * from c_allocationline cal
 	left join c_allocationhdr ca on ca.c_allocationhdr_id = cal.c_allocationhdr_id 
-	left join c_allocationline call on call.c_charge_id is not null 
-									and call.c_allocationhdr_id = cal.c_allocationhdr_id 
-     								and abs(call.amount) = abs(cal.amount) --alocação de pagamentos linhas 
+	--left join c_payment cp  on call.c_charge_id is not null 
+				--					and call.c_allocationhdr_id = cal.c_allocationhdr_id 
+     			--					and abs(call.amount) = abs(cal.amount) --alocação de pagamentos linhas 
+    left join c_bankstatementline cbkl on cal.c_payment_id = cbkl.c_bankstatementline_id --alocação de pagamentos
 where cal.ad_client_id = 5000017 -- cliente
-		and cal.c_payment_id is not null  --valida de pagamento não é nulo 
-		and cal.c_invoice_id is null --valida se a fatura é nula
-		and cal.c_order_id is null --valida se a ordem é nula 
-		and call.c_allocationline_id is not null 
+		--and cal.c_bpartner_id  in (5000050)  --valida de pagamento não é nulo 
+		--and cal.c_invoice_id is null --valida se a fatura é nula
+		--and cal.c_order_id is null --valida se a ordem é nula 
+		--and call.c_allocationline_id is not null 
   		and ca.docstatus in ('CO','CL')
-  		and ca.dateacct between ('2024-11-01') and ('2024-11-30')
+  		and ca.dateacct between ('2024-02-01') and ('2024-02-29');
 
 
 -- Titulos
@@ -569,9 +569,10 @@ with
 --##########################################################################################################################################
 --Inicio -
 -- Consulta principal de receita e despesas 
-select 	--ao."name",cba."name",cbkl.dateacct,cbk.updated,cbkl.c_bankstatementline_id,cbkl.line,cbkl.trxamt,cbk.beginningbalance,cbk.endingbalance,
-		cbkl.dateacct as data_pagamento,coalesce(ci.dateinvoiced,cidate.dateinvoiced) as data_emissao,coalesce(cips.duedate,cidate.duedate) as data_vencimento, --datas 
-		ao.ad_org_id as organizacao_cod, ao."name" as organizacao_nome, cba.c_bankaccount_id as banco_id , cba."name" as banco_nome, --codigos e nomes
+select 	*
+		--ao."name",cba."name",cbkl.dateacct,cbk.updated,cbkl.c_bankstatementline_id,cbkl.line,cbkl.trxamt,cbk.beginningbalance,cbk.endingbalance
+		--cbkl.dateacct as data_pagamento,coalesce(ci.dateinvoiced,cidate.dateinvoiced) as data_emissao,coalesce(cips.duedate,cidate.duedate) as data_vencimento --datas 
+		/*ao.ad_org_id as organizacao_cod, ao."name" as organizacao_nome, cba.c_bankaccount_id as banco_id , cba."name" as banco_nome, --codigos e nomes
 		cb.c_bpartner_id  as pareceiro_id,cb."name" as parceiro_nome, --cod e nomes 
 		case when (cc.c_elementvalue_id is null and cp.reversal_id is not null) or (cp.docstatus = 'RE') or (cbk.docstatus  = 'RE') or (cp.docstatus = 'RE')
 						or (cbkl.description like ('%^%') or cbkl.description like ('%<%') or cbkl.description like ('%>%'))
@@ -621,10 +622,11 @@ select 	--ao."name",cba."name",cbkl.dateacct,cbk.updated,cbkl.c_bankstatementlin
 	 cbk.updated as data_update,
 	 CONCAT(CAST(cbkl.dateacct AS TEXT), CAST(cbkl.c_bankstatementline_id AS TEXT)) AS orderby,*
 	 --cp.user1_id,cp.user2_id,ci.user1_id,ci.user2_id,cil.user1_id,cil.user2_id, --validação de centro de custos - usado para analises 
-																--	cilcc.cil_cc,calant.cacicil_cc,cdoc.user1_id,cdoc.user2_id
+																--	cilcc.cil_cc,calant.cacicil_cc,cdoc.user1_id,cdoc.user2_id*/
 from c_bankstatementline cbkl
 	left join c_payment cp on cp.c_payment_id  = cbkl.c_payment_id --pagamentos
 	left join c_allocationline cal on cal.c_payment_id = cbkl.c_bankstatementline_id --alocação de pagamentos
+										and cal.c_bpartner_id = cbkl.c_bpartner_id 
 	left join c_doctype cdoc on cdoc.c_doctype_id  = cp.c_doctype_id --tipos de documentos
 	left join c_bankstatement cbk on cbk.c_bankstatement_id = cbkl.c_bankstatement_id --extrato bancario 
 	left join c_bankaccount cba on cba.c_bankaccount_id = cbk.c_bankaccount_id --contas bancarias
@@ -643,11 +645,12 @@ from c_bankstatementline cbkl
 where cbkl.dateacct between '2024-02-01' and '2024-02-29'
 	and cbkl.isactive  = 'Y' --registro ativo
 	and cbkl.ad_org_id = 5000050 -- organizacao
-	and cbk.c_bankaccount_id = 5000220 -- bancos
-	and cbkl.trxamt  = 2119.14
+	--and cbk.c_bankaccount_id = 5000220 -- bancos
+	and cbkl.c_bpartner_id = 5069078
+	and cbkl.trxamt  = 2119.14;
 	--and cbkl.c_bpartner_id  = 5151800;
  
-order by organizacao_cod,banco_id,orderby
+--order by organizacao_cod,banco_id,orderby
 --Consulta principal de receita e despesas 
 --Fim
 --##########################################################################################################################################
