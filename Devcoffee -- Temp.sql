@@ -54,9 +54,13 @@ where cp.datetrx  between '2024-01-01' and '2024-12-31'
  	cal.amount,cal.writeoffamt,cal.discountamt,
  * from c_allocationline cal
  	left join c_allocationhdr ca on cal.c_allocationhdr_id = ca.c_allocationhdr_id 
+ 	left join c_payment cp on cp.c_payment_id  = cal.c_payment_id --pagamentos
+								and cp.c_bpartner_id = cal.c_bpartner_id --correção, força left join sem duplicações 
+	left join c_bankstatementline cbkl on cal.c_payment_id = cbkl.c_bankstatementline_id --alocação de pagamentos
+										and cal.c_bpartner_id = cbkl.c_bpartner_id --correção, força left join sem duplicações 
 where ca.datetrx between '2024-01-01' and '2024-12-31'
-	--and cal.c_payment_id = 5223991
-	and cal.c_allocationline_id in (5334931,5334930,5334929,5334928,5334927,5334926,5334925,5334924,5334923,5334922,5334921)
+	and cal.c_payment_id = 5223991
+	or cal.c_allocationline_id in (5334931,5334930,5334929,5334928,5334927,5334926,5334925,5334924,5334923,5334922,5334921)
 	--or cal.c_bpartner_id = 5069078;
 
 

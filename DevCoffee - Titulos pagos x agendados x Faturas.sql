@@ -625,7 +625,7 @@ select ao."name",cba."name",cbkl.dateacct,cbk.updated,cbkl.c_bankstatementline_i
 from c_bankstatementline cbkl
 	left join c_payment cp on cp.c_payment_id  = cbkl.c_payment_id --pagamentos
 									and cp.c_bpartner_id = cbkl.c_bpartner_id 
-	left join c_allocationline cal on cal.c_payment_id = cbkl.c_bankstatementline_id --alocação de pagamentos
+	left join c_allocationline cal on cal.c_payment_id = cbkl.c_payment_id --alocação de pagamentos
 										and cal.c_bpartner_id = cbkl.c_bpartner_id 
 	left join c_doctype cdoc on cdoc.c_doctype_id  = cp.c_doctype_id --tipos de documentos
 	left join c_bankstatement cbk on cbk.c_bankstatement_id = cbkl.c_bankstatement_id --extrato bancario 
