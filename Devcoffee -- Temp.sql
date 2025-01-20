@@ -431,3 +431,24 @@ Monitorar a evolução dos saldos bancários.
 Identificar o volume de entradas e saídas financeiras no período.
 Fornecer uma visão clara da saúde financeira por conta e empresa.
  */
+
+-- Query para analise das alocações x extrato bancarios 
+select * from c_bankstatementline cbkl
+	left join c_payment cp on cp.c_payment_id  = cbkl.c_payment_id --pagamentos
+									and cp.c_bpartner_id = cbkl.c_bpartner_id 
+	left join c_allocationline cal on cal.c_payment_id = cbkl.c_payment_id --alocação de pagamentos
+										and cal.c_bpartner_id = cbkl.c_bpartner_id;
+-- Alocacao linhas
+select cal.c_payment_id,
+* from c_allocationline cal
+order by cal.c_payment_id ;
+-- Alocacao 
+select 
+* from c_allocationhdr ca;
+-- Pagamentos 
+select cp.c_invoice_id , cp.c_payment_id ,cp.user1_id , cp.user2_id , cp.datetrx,cp.payamt,cp.isreceipt, cp.docstatus , cp.c_charge_id ,cp.c_invoicepayschedule_id ,
+* from c_payment cp
+where cp.c_payment_id = 5415942;
+--Extrato linhas
+select cbkl.ad_org_id ,cbkl.c_payment_id ,cbkl.c_invoice_id ,cbkl.trxamt,
+* from c_bankstatementline cbkl;

@@ -569,8 +569,8 @@ with
 --##########################################################################################################################################
 --Inicio -
 -- Consulta principal de receita e despesas 
-select *
-		/*ao."name",cba."name",cbkl.dateacct,cbk.updated,cbkl.c_bankstatementline_id,cbkl.line,cbkl.trxamt,cbk.beginningbalance,cbk.endingbalance,
+select 
+		ao."name",cba."name",cbkl.dateacct,cbk.updated,cbkl.c_bankstatementline_id,cbkl.line,cbkl.trxamt,cbk.beginningbalance,cbk.endingbalance,
 		cbkl.dateacct as data_pagamento,coalesce(ci.dateinvoiced,cidate.dateinvoiced) as data_emissao,coalesce(cips.duedate,cidate.duedate) as data_vencimento, --datas 
 		ao.ad_org_id as organizacao_cod, ao."name" as organizacao_nome, cba.c_bankaccount_id as banco_id , cba."name" as banco_nome, --codigos e nomes
 		cb.c_bpartner_id  as pareceiro_id,cb."name" as parceiro_nome, --cod e nomes 
@@ -620,21 +620,21 @@ select *
 	 	else cbkl.trxamt
 	 end as test, --analise
 	 cbk.updated as data_update,
-	 CONCAT(CAST(cbkl.dateacct AS TEXT), CAST(cbkl.c_bankstatementline_id AS TEXT)) AS orderby,*
+	 CONCAT(CAST(cbkl.dateacct AS TEXT), CAST(cbkl.c_bankstatementline_id AS TEXT)) AS orderby
 	 --cp.user1_id,cp.user2_id,ci.user1_id,ci.user2_id,cil.user1_id,cil.user2_id, --validação de centro de custos - usado para analises 
-																--	cilcc.cil_cc,calant.cacicil_cc,cdoc.user1_id,cdoc.user2_id*/
+																--	cilcc.cil_cc,calant.cacicil_cc,cdoc.user1_id,cdoc.user2_id
 from c_bankstatementline cbkl
 	left join c_payment cp on cp.c_payment_id  = cbkl.c_payment_id --pagamentos
-									--and cp.c_bpartner_id = cbkl.c_bpartner_id 
+									and cp.c_bpartner_id = cbkl.c_bpartner_id 
 	left join c_allocationline cal on cal.c_payment_id = cbkl.c_payment_id --alocação de pagamentos
-										--and cal.c_bpartner_id = cbkl.c_bpartner_id 
+										and cal.c_bpartner_id = cbkl.c_bpartner_id 
 	left join c_doctype cdoc on cdoc.c_doctype_id  = cp.c_doctype_id --tipos de documentos
 	left join c_bankstatement cbk on cbk.c_bankstatement_id = cbkl.c_bankstatement_id --extrato bancario 
 	left join c_bankaccount cba on cba.c_bankaccount_id = cbk.c_bankaccount_id --contas bancarias
 	left join ad_org ao on ao.ad_org_id  = cbkl.ad_org_id -- empresas 
 	left join c_bpartner cb on cb.c_bpartner_id = cbkl.c_bpartner_id --parceiros
 	left join c_invoice ci on cp.c_invoice_id = ci.c_invoice_id --faturas
-								--and cp.c_bpartner_id = cbkl.c_bpartner_id 
+								and cp.c_bpartner_id = cbkl.c_bpartner_id 
 	left join c_invoiceline cil on cil.c_invoiceline_id = ci.c_invoice_id --faturas linhas
 	left join c_invoicepayschedule cips on cips.c_invoicepayschedule_id = cp.c_invoicepayschedule_id --agendamentos de pagamentos 
 	left join cil_temp cilcc on cil.c_invoice_id = ci.c_invoice_id --Itens da Faturaem cte
