@@ -644,7 +644,7 @@ from c_bankstatementline cbkl
 	left join c_elementvalue cc on cc.c_elementvalue_id = coalesce(cp.user1_id,cp.user2_id,ci.user1_id,ci.user2_id,cil.user1_id,cil.user2_id,
 																		cilcc.cil_cc,calant.cacicil_cc,cdoc.user1_id,cdoc.user2_id ,0) --cc valida valores de varios campos de varias tabelas
 	left join dev_cancel_estorn_temp as dce on dce.c_bpartner_id = cbkl.c_bpartner_id  and cbkl.trxamt = (dce.dce_total)*-1 --valores de cancelamentos,estornos,devoluções
-where cbkl.dateacct between '2024-02-01' and '2024-02-29'
+where cbkl.dateacct between '2024-01-01' and '2030-12-31'
 	and cbkl.isactive  = 'Y';--registro ativo
 	--and cbkl.ad_org_id = 5000050 -- organizacao
 	--and cbk.c_bankaccount_id = 5000220 -- bancos
