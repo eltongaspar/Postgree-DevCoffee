@@ -24,13 +24,13 @@ where cc.value in ('0301','999991','999999')
 --5125433,5154905,5142112,5154338,5155113,5092534
 --Parceiros 
 select * from c_bpartner cbp
-where  cbp."name" like ('%SANDRO DE SOUZA%');
+where  cbp.c_bpartner_id in (5141045,5114128);
 
 -- Faturas
 select ci.c_payment_id , ci.user1_id , ci.user2_id , ci.grandtotal, ci.dateinvoiced,
 * from c_invoice ci
-where ci.dateacct  between '2024-11-01' and '2024-11-30'
-	and ci.c_bpartner_id  = 5151800;
+where ci.dateacct  between '2024-01-01' and '2024-12-31'
+	and ci.c_invoice_id  in (5248486,5248484,5248482,5248485,5248483,5248481,5248480,5248479,5248477,5248478,5248476);
 -- c_payment_id nulo
 
 
@@ -44,16 +44,20 @@ where ci.dateacct between '2024-11-01' and '2024-11-30'
 -- Pagamentos 
 select cp.c_invoice_id , cp.c_payment_id ,cp.user1_id , cp.user2_id , cp.datetrx,cp.payamt,cp.isreceipt, cp.docstatus , cp.c_charge_id ,cp.c_invoicepayschedule_id ,
 * from c_payment cp
-where cp.datetrx  between '2024-11-01' and '2024-11-30'
-	and cp.c_bpartner_id = 5151800;
+where cp.datetrx  between '2024-01-01' and '2024-12-31'
+	--and cp.c_payment_id = 5223991
+	and cp.c_invoice_id  in (5248486,5248484,5248482,5248485,5248483,5248481,5248480,5248479,5248477,5248478,5248476)
+	and cp.c_bpartner_id = 5069078;
 
 --Alocação de pagamentos linhas
  select  ca.c_allocationhdr_id,cal.c_payment_id,cal.c_invoice_id,cal.c_invoice_id,cal.c_invoicepayschedule_id,
  	cal.amount,cal.writeoffamt,cal.discountamt,
  * from c_allocationline cal
  	left join c_allocationhdr ca on cal.c_allocationhdr_id = ca.c_allocationhdr_id 
-where ca.datetrx between '2024-11-01' and '2024-11-30'
-	and cal.c_bpartner_id = 5151800;
+where ca.datetrx between '2024-01-01' and '2024-12-31'
+	--and cal.c_payment_id = 5223991
+	and cal.c_allocationline_id in (5334931,5334930,5334929,5334928,5334927,5334926,5334925,5334924,5334923,5334922,5334921)
+	--or cal.c_bpartner_id = 5069078;
 
 
 --Alocação de pagamentos 
@@ -63,9 +67,10 @@ where ca.datetrx between '2024-11-01' and '2024-11-30';
 --Extrato linhas
 select cbkl.ad_org_id ,cbkl.c_payment_id ,cbkl.c_invoice_id ,cbkl.trxamt,
 * from c_bankstatementline cbkl
-where cbkl.dateacct between '2024-11-01' and '2024-11-30'
+where cbkl.dateacct between '2024-01-01' and '2024-12-31'
+	and cbkl.c_bankstatementline_id = 5299506
 	and cbkl.isactive  = 'Y' --registro ativo
-	and cbkl.c_bpartner_id  = 5151800;
+	and cbkl.c_bpartner_id  = 5069078;
  
  -- Extrato 
 select cba.c_bankaccount_id as banco_id , cba."name" as banco_nome,cbk.statementdate ,
@@ -73,8 +78,8 @@ select cba.c_bankaccount_id as banco_id , cba."name" as banco_nome,cbk.statement
 from c_bankstatement cbk
 	left join c_bankstatementline cbkl on cbkl.c_bankstatement_id = cbk.c_bankstatement_id 
 	left join c_bankaccount cba on cba.c_bankaccount_id = cbk.c_bankaccount_id --contas bancarias
-where cbk.dateacct between '2024-10-31' and '2024-11-30'
-	and cba.c_bankaccount_id   = 5000220
+where cbk.dateacct between '2024-01-01' and '2024-12-31'
+	and cbk.c_bankstatement_id  = 5012866
  order by cba.c_bankaccount_id,cbkl.eftstatementlinedate ;
 	--and cbkl.c_payment_id  in (5378361,5377971,5378377);
 

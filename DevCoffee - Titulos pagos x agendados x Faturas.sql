@@ -619,11 +619,12 @@ select ao."name",cba."name",cbkl.dateacct,cbk.updated,cbkl.c_bankstatementline_i
 	 	else cbkl.trxamt
 	 end as test, --analise
 	 cbk.updated as data_update,
-	 CONCAT(CAST(cbkl.dateacct AS TEXT), CAST(cbkl.c_bankstatementline_id AS TEXT)) AS orderby
+	 CONCAT(CAST(cbkl.dateacct AS TEXT), CAST(cbkl.c_bankstatementline_id AS TEXT)) AS orderby,*
 	 --cp.user1_id,cp.user2_id,ci.user1_id,ci.user2_id,cil.user1_id,cil.user2_id, --validação de centro de custos - usado para analises 
 																--	cilcc.cil_cc,calant.cacicil_cc,cdoc.user1_id,cdoc.user2_id*/
 from c_bankstatementline cbkl
 	left join c_payment cp on cp.c_payment_id  = cbkl.c_payment_id --pagamentos
+									and cp.c_banktransfer_id = cbkl.c_bpartner_id 
 	left join c_allocationline cal on cal.c_payment_id = cbkl.c_bankstatementline_id --alocação de pagamentos
 										and cal.c_bpartner_id = cbkl.c_bpartner_id 
 	left join c_doctype cdoc on cdoc.c_doctype_id  = cp.c_doctype_id --tipos de documentos
@@ -632,6 +633,7 @@ from c_bankstatementline cbkl
 	left join ad_org ao on ao.ad_org_id  = cbkl.ad_org_id -- empresas 
 	left join c_bpartner cb on cb.c_bpartner_id = cbkl.c_bpartner_id --parceiros
 	left join c_invoice ci on cp.c_invoice_id = ci.c_invoice_id --faturas
+								and cp.c_bpartner_id = cbkl.c_bpartner_id 
 	left join c_invoiceline cil on cil.c_invoiceline_id = ci.c_invoice_id --faturas linhas
 	left join c_invoicepayschedule cips on cips.c_invoicepayschedule_id = cp.c_invoicepayschedule_id --agendamentos de pagamentos 
 	left join cil_temp cilcc on cil.c_invoice_id = ci.c_invoice_id --Itens da Faturaem cte
@@ -645,9 +647,9 @@ where cbkl.dateacct between '2024-02-01' and '2024-02-29'
 	and cbkl.isactive  = 'Y' --registro ativo
 	and cbkl.ad_org_id = 5000050 -- organizacao
 	and cbk.c_bankaccount_id = 5000220 -- bancos
-	--and cbkl.c_bpartner_id = 5069078
-	--and cbkl.trxamt  = 2119.14;
-	--and cbkl.c_bpartner_id  = 5151800;
+	and cbkl.c_bpartner_id = 5069078
+	and cbkl.trxamt  = 2119.14;
+	and cbkl.c_bpartner_id  = 5151800;
  order by organizacao_cod,banco_id,orderby;
 --Consulta principal de receita e despesas 
 --Fim
