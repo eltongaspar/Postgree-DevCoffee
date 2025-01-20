@@ -569,7 +569,8 @@ with
 --##########################################################################################################################################
 --Inicio -
 -- Consulta principal de receita e despesas 
-select ao."name",cba."name",cbkl.dateacct,cbk.updated,cbkl.c_bankstatementline_id,cbkl.line,cbkl.trxamt,cbk.beginningbalance,cbk.endingbalance,
+select *
+		/*ao."name",cba."name",cbkl.dateacct,cbk.updated,cbkl.c_bankstatementline_id,cbkl.line,cbkl.trxamt,cbk.beginningbalance,cbk.endingbalance,
 		cbkl.dateacct as data_pagamento,coalesce(ci.dateinvoiced,cidate.dateinvoiced) as data_emissao,coalesce(cips.duedate,cidate.duedate) as data_vencimento, --datas 
 		ao.ad_org_id as organizacao_cod, ao."name" as organizacao_nome, cba.c_bankaccount_id as banco_id , cba."name" as banco_nome, --codigos e nomes
 		cb.c_bpartner_id  as pareceiro_id,cb."name" as parceiro_nome, --cod e nomes 
@@ -624,16 +625,16 @@ select ao."name",cba."name",cbkl.dateacct,cbk.updated,cbkl.c_bankstatementline_i
 																--	cilcc.cil_cc,calant.cacicil_cc,cdoc.user1_id,cdoc.user2_id*/
 from c_bankstatementline cbkl
 	left join c_payment cp on cp.c_payment_id  = cbkl.c_payment_id --pagamentos
-									and cp.c_bpartner_id = cbkl.c_bpartner_id 
+									--and cp.c_bpartner_id = cbkl.c_bpartner_id 
 	left join c_allocationline cal on cal.c_payment_id = cbkl.c_payment_id --alocação de pagamentos
-										and cal.c_bpartner_id = cbkl.c_bpartner_id 
+										--and cal.c_bpartner_id = cbkl.c_bpartner_id 
 	left join c_doctype cdoc on cdoc.c_doctype_id  = cp.c_doctype_id --tipos de documentos
 	left join c_bankstatement cbk on cbk.c_bankstatement_id = cbkl.c_bankstatement_id --extrato bancario 
 	left join c_bankaccount cba on cba.c_bankaccount_id = cbk.c_bankaccount_id --contas bancarias
 	left join ad_org ao on ao.ad_org_id  = cbkl.ad_org_id -- empresas 
 	left join c_bpartner cb on cb.c_bpartner_id = cbkl.c_bpartner_id --parceiros
 	left join c_invoice ci on cp.c_invoice_id = ci.c_invoice_id --faturas
-								and cp.c_bpartner_id = cbkl.c_bpartner_id 
+								--and cp.c_bpartner_id = cbkl.c_bpartner_id 
 	left join c_invoiceline cil on cil.c_invoiceline_id = ci.c_invoice_id --faturas linhas
 	left join c_invoicepayschedule cips on cips.c_invoicepayschedule_id = cp.c_invoicepayschedule_id --agendamentos de pagamentos 
 	left join cil_temp cilcc on cil.c_invoice_id = ci.c_invoice_id --Itens da Faturaem cte
@@ -644,13 +645,13 @@ from c_bankstatementline cbkl
 																		cilcc.cil_cc,calant.cacicil_cc,cdoc.user1_id,cdoc.user2_id ,0) --cc valida valores de varios campos de varias tabelas
 	left join dev_cancel_estorn_temp as dce on dce.c_bpartner_id = cbkl.c_bpartner_id  and cbkl.trxamt = (dce.dce_total)*-1 --valores de cancelamentos,estornos,devoluções
 where cbkl.dateacct between '2024-02-01' and '2024-02-29'
-	and cbkl.isactive  = 'Y' --registro ativo
-	and cbkl.ad_org_id = 5000050 -- organizacao
-	and cbk.c_bankaccount_id = 5000220 -- bancos
-	and cbkl.c_bpartner_id = 5069078
-	and cbkl.trxamt  = 2119.14;
-	and cbkl.c_bpartner_id  = 5151800;
- order by organizacao_cod,banco_id,orderby;
+	and cbkl.isactive  = 'Y';--registro ativo
+	--and cbkl.ad_org_id = 5000050 -- organizacao
+	--and cbk.c_bankaccount_id = 5000220 -- bancos
+	--and cbkl.c_bpartner_id = 5069078
+	--and cbkl.trxamt  = 2119.14;
+	--and cbkl.c_bpartner_id  = 5151800;
+ --order by organizacao_cod,banco_id,orderby;
 --Consulta principal de receita e despesas 
 --Fim
 --##########################################################################################################################################
