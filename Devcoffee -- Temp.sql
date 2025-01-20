@@ -442,13 +442,17 @@ select * from c_bankstatementline cbkl
 select cal.c_payment_id,
 * from c_allocationline cal
 order by cal.c_payment_id ;
+
 -- Alocacao 
 select 
 * from c_allocationhdr ca;
+
 -- Pagamentos 
 select cp.c_invoice_id , cp.c_payment_id ,cp.user1_id , cp.user2_id , cp.datetrx,cp.payamt,cp.isreceipt, cp.docstatus , cp.c_charge_id ,cp.c_invoicepayschedule_id ,
 * from c_payment cp
+	left join c_allocationline cal on cp.c_payment_id  = cal.c_payment_id 
 where cp.c_payment_id = 5415942;
+
 --Extrato linhas
 select cbkl.ad_org_id ,cbkl.c_payment_id ,cbkl.c_invoice_id ,cbkl.trxamt,
 * from c_bankstatementline cbkl;

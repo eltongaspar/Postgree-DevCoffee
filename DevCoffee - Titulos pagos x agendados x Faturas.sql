@@ -570,6 +570,7 @@ with
 --Inicio -
 -- Consulta principal de receita e despesas 
 select 
+		cp.c_payment_id as pagamento_id,
 		ao."name",cba."name",cbkl.dateacct,cbk.updated,cbkl.c_bankstatementline_id,cbkl.line,cbkl.trxamt,cbk.beginningbalance,cbk.endingbalance,
 		cbkl.dateacct as data_pagamento,coalesce(ci.dateinvoiced,cidate.dateinvoiced) as data_emissao,coalesce(cips.duedate,cidate.duedate) as data_vencimento, --datas 
 		ao.ad_org_id as organizacao_cod, ao."name" as organizacao_nome, cba.c_bankaccount_id as banco_id , cba."name" as banco_nome, --codigos e nomes
@@ -626,8 +627,8 @@ select
 from c_bankstatementline cbkl
 	left join c_payment cp on cp.c_payment_id  = cbkl.c_payment_id --pagamentos
 									and cp.c_bpartner_id = cbkl.c_bpartner_id 
-	left join c_allocationline cal on cal.c_payment_id = cbkl.c_payment_id --alocação de pagamentos
-										and cal.c_bpartner_id = cbkl.c_bpartner_id 
+	--left join c_allocationline cal on cal.c_payment_id = cbkl.c_payment_id --alocação de pagamentos
+									--	and cal.c_bpartner_id = alocacao linhas retirada devivo  retornar mais de um 1 item pagamentos, pode existir um pagamento id alocado em várias faturas
 	left join c_doctype cdoc on cdoc.c_doctype_id  = cp.c_doctype_id --tipos de documentos
 	left join c_bankstatement cbk on cbk.c_bankstatement_id = cbkl.c_bankstatement_id --extrato bancario 
 	left join c_bankaccount cba on cba.c_bankaccount_id = cbk.c_bankaccount_id --contas bancarias
