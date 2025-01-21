@@ -120,7 +120,7 @@ from c_bankstatementline cbkl
 	left join ad_org ao on ao.ad_org_id  = cbkl.ad_org_id -- empresas 
 	left join c_bpartner cb on cb.c_bpartner_id = cbkl.c_bpartner_id --parceiros
 	left join c_invoice ci on cp.c_invoice_id = ci.c_invoice_id --faturas
-								and cp.c_bpartner_id = cbkl.c_bpartner_id --correção, força left join sem duplicações 
+								and ci.c_bpartner_id = cp.c_bpartner_id --correção, força left join sem duplicações 
 	left join c_invoiceline cil on cil.c_invoiceline_id = ci.c_invoice_id --faturas linhas
 	left join c_invoicepayschedule cips on cips.c_invoicepayschedule_id = cp.c_invoicepayschedule_id --agendamentos de pagamentos 
 	left join cil_temp cilcc on cil.c_invoice_id = ci.c_invoice_id --Itens da Faturaem cte
