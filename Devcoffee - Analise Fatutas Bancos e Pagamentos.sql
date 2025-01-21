@@ -91,7 +91,7 @@ select 	--ao."name",cba."name",cbkl.dateacct,cbk.updated,cbkl.c_bankstatementlin
 	 case when cbkl.trxamt > 0 then 'Entrada'
 	 		when cbkl.trxamt < 0 then 'Saida'
 	 end  as Tipo_Transacao,
-	 cical.invoice_list as invoice_list, -- lista de faturas 
+	 cical.invoice_list as invoice_list, -- lista de faturas agupadas
 	 cp.docstatus doc_status_pag, cp.docstatus doc_status_fatura, --status documentos 
 	 case when ci.docstatus in ('RE') or cp.docstatus in ('RE')
 	 	then 'Devolução'
