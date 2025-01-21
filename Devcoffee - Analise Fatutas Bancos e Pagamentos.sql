@@ -97,15 +97,16 @@ select 	--ao."name",cba."name",cbkl.dateacct,cbk.updated,cbkl.c_bankstatementlin
 	 	then 'Devolução'
 	 	else ''
 	 end as Devolucao,
-	 dce.dce_total as dce_total,cbkl.trxamt as cbkl_trxamt, --valores 
-	 case 
+	 dce.dce_total as dce_total,
+	 --cbkl.trxamt as cbkl_trxamt, --valores 
+	 /*case 
 	 	when cbkl.trxamt > 0 and dce.dce_total < 0
 	 		then (cbkl.trxamt) + (dce.dce_total)
 	 	when  cbkl.trxamt < 0
 	 		then cbkl.trxamt
 	 	else cbkl.trxamt
 	 end as test, --analise
-	 cbk.updated as data_update,
+	 cbk.updated as data_update,*/
 	 CONCAT(CAST(cbkl.dateacct AS TEXT), CAST(cbkl.c_bankstatementline_id AS TEXT)) AS orderby
 	 --cp.user1_id,cp.user2_id,ci.user1_id,ci.user2_id,cil.user1_id,cil.user2_id, --validação de centro de custos - usado para analises 
 																--	cilcc.cil_cc,calant.cacicil_cc,cdoc.user1_id,cdoc.user2_id
