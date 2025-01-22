@@ -456,3 +456,22 @@ where cp.c_payment_id = 5415942;
 --Extrato linhas
 select cbkl.ad_org_id ,cbkl.c_payment_id ,cbkl.c_invoice_id ,cbkl.trxamt,
 * from c_bankstatementline cbkl;
+
+select ao.ad_org_id, ao."name" me,cba.c_bank_id,cba."name",cbk.documentno,
+* from c_bankstatement cbk
+	LEFT JOIN c_bankaccount cba ON cba.c_bankaccount_id = cbk.c_bankaccount_id -- Contas bancárias
+    LEFT JOIN ad_org ao ON ao.ad_org_id = cbk.ad_org_id -- Empresas
+where ao.ad_org_id = 5000047 and cba.c_bank_id = 5000152;
+
+select ao.ad_org_id, ao."name" me,cba.c_bank_id,cba."name",cbk.documentno,
+* from c_bankstatement cbk
+    LEFT JOIN ad_org ao ON ao.ad_org_id = cbk.ad_org_id -- Empresas
+    left join c_bankstatementline cbkl on cbk.c_bankstatement_id = cbkl.c_bankstatement_id --extrato bancario 
+    LEFT JOIN c_bankaccount cba ON cba.c_bankaccount_id = cbk.c_bankaccount_id -- Contas bancárias
+where ao.ad_org_id = 5000047 and cba.c_bank_id = 5000152
+	and cbk.statementdate >= '2025-01-20'
+order by cbk.documentno;
+
+
+
+
