@@ -1,5 +1,8 @@
 -- Empresas 
-select * from ad_org ao ;
+select ao.ad_org_id as organizacao_id, ao."name" as organizacao_nome
+from ad_org ao 
+where ao.ad_org_id not in  (0);
+
 
 -- Extrato bancario 
 select 
