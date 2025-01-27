@@ -21,10 +21,10 @@ from c_elementvalue cc
 where cc.value in ('0301','999991','999999')
 	or cc.c_elementvalue_id = 5041219 ;
 
---5125433,5154905,5142112,5154338,5155113,5092534
 --Parceiros 
-select * from c_bpartner cbp
-where  cbp.c_bpartner_id in (5141045,5114128);
+select cbp.c_bpartner_id as parceiro_id, cbp.name as parceiro_nome,coalesce(cbp.lbr_cnpj,cbp.lbr_cpf,'')
+from c_bpartner cbp;
+
 
 -- Faturas
 select ci.c_payment_id , ci.user1_id , ci.user2_id , ci.grandtotal, ci.dateinvoiced,
