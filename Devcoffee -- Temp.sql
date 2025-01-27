@@ -472,6 +472,63 @@ where ao.ad_org_id = 5000047 and cba.c_bank_id = 5000152
 	and cbk.statementdate >= '2025-01-20'
 order by cbk.documentno;
 
+-- Soma Geral Empresa/Bsnco
+SELECT 
+    ao.ad_org_id AS empresa_id,
+    ao.name AS empresa_nome,
+    cba.c_bankaccount_id AS banco_id,
+    cba.name AS banco_nome,
+    SUM(cbkl.trxamt) AS soma_total,
+    SUM(CASE WHEN cbkl.trxamt > 0 THEN cbkl.trxamt ELSE 0 END) AS soma_positivos,
+    SUM(CASE WHEN cbkl.trxamt < 0 THEN cbkl.trxamt ELSE 0 END) AS soma_negativos
+FROM c_bankstatementline cbkl
+LEFT JOIN c_bankstatement cbk ON cbk.c_bankstatement_id = cbkl.c_bankstatement_id
+LEFT JOIN c_bankaccount cba ON cba.c_bankaccount_id = cbk.c_bankaccount_id
+LEFT JOIN ad_org ao ON ao.ad_org_id = cbkl.ad_org_id
+WHERE cbkl.ad_client_id = 5000017
+  AND cbkl.isactive = 'Y'
+  AND cbk.docstatus IN ('CO', 'CL')
+  AND cbkl.dateacct BETWEEN '2024-01-01' AND '2099-12-31'
+GROUP BY ao.ad_org_id, ao.name, cba.c_bankaccount_id, cba.name
+ORDER BY ao.ad_org_id, cba.c_bankaccount_id;
+
+-- Soma Geral Empresa/Bsnco
+SELECT 
+    ao.ad_org_id AS empresa_id,
+    ao.name AS empresa_nome,
+    SUM(cbkl.trxamt) AS soma_total,
+    SUM(CASE WHEN cbkl.trxamt > 0 THEN cbkl.trxamt ELSE 0 END) AS soma_positivos,
+    SUM(CASE WHEN cbkl.trxamt < 0 THEN cbkl.trxamt ELSE 0 END) AS soma_negativos
+FROM c_bankstatementline cbkl
+LEFT JOIN c_bankstatement cbk ON cbk.c_bankstatement_id = cbkl.c_bankstatement_id
+LEFT JOIN c_bankaccount cba ON cba.c_bankaccount_id = cbk.c_bankaccount_id
+LEFT JOIN ad_org ao ON ao.ad_org_id = cbkl.ad_org_id
+WHERE cbkl.ad_client_id = 5000017
+  AND cbkl.isactive = 'Y'
+  AND cbk.docstatus IN ('CO', 'CL')
+  AND cbkl.dateacct BETWEEN '2024-01-01' AND '2099-12-31'
+GROUP BY ao.ad_org_id, ao.name
+ORDER BY ao.ad_org_id;
+
+
+
+-- Soma Geral Empresa/Bsnco
+SELECT 
+    SUM(cbkl.trxamt) AS soma_total,
+    SUM(CASE WHEN cbkl.trxamt > 0 THEN cbkl.trxamt ELSE 0 END) AS soma_positivos,
+    SUM(CASE WHEN cbkl.trxamt < 0 THEN cbkl.trxamt ELSE 0 END) AS soma_negativos
+FROM c_bankstatementline cbkl
+LEFT JOIN c_bankstatement cbk ON cbk.c_bankstatement_id = cbkl.c_bankstatement_id
+LEFT JOIN c_bankaccount cba ON cba.c_bankaccount_id = cbk.c_bankaccount_id
+LEFT JOIN ad_org ao ON ao.ad_org_id = cbkl.ad_org_id
+WHERE cbkl.ad_client_id = 5000017
+  AND cbkl.isactive = 'Y'
+  AND cbk.docstatus IN ('CO', 'CL')
+  AND cbkl.dateacct BETWEEN '2024-01-01' AND '2099-12-31';
+
+
+
+
 
 
 
