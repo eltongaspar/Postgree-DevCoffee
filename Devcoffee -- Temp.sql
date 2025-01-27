@@ -472,7 +472,11 @@ where ao.ad_org_id = 5000047 and cba.c_bank_id = 5000152
 	and cbk.statementdate >= '2025-01-20'
 order by cbk.documentno;
 
--- Soma Geral Empresa/Bsnco
+
+
+
+
+-- Soma Geral Empresa/Banco
 SELECT 
     ao.ad_org_id AS empresa_id,
     ao.name AS empresa_nome,
