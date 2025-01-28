@@ -16,10 +16,14 @@ from c_bankaccount cba
 	left join ad_org ao on cba.ad_org_id = ao.ad_org_id;
 
 --centro de custos --exclusao da visao de bi
-select cc.c_elementvalue_id ,cc."name" ,cc.value
+select cc.c_elementvalue_id  as cc_id,cc."name"  as cc_nome,cc.value as cc_value
 from c_elementvalue cc 
 where cc.value in ('0301','999991','999999')
 	or cc.c_elementvalue_id = 5041219 ;
+
+--centro de custos --exclusao da visao de bi
+select cc.c_elementvalue_id  as cc_id,cc."name"  as cc_nome,cc.value as cc_value
+from c_elementvalue cc ;
 
 --Parceiros 
 select cbp.c_bpartner_id as parceiro_id, cbp.name as parceiro_nome,coalesce(cbp.lbr_cnpj,cbp.lbr_cpf,'')
