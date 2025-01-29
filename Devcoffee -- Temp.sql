@@ -536,7 +536,70 @@ WHERE cbkl.ad_client_id = 5000017
 
 
 
+-- Pagamentos x Alocação 
+select * from c_paymentallocate cpal;
 
+SELECT h.c_allocationhdr_id,
+    h.ad_client_id,
+    h.ad_org_id,
+    h.isactive,
+    h.created,
+    h.createdby,
+    h.updated,
+    h.updatedby,
+    h.documentno,
+    h.description,
+    h.datetrx,
+    h.dateacct,
+    h.c_currency_id,
+    h.approvalamt,
+    h.ismanual,
+    h.docstatus,
+    h.docaction,
+    h.processed,
+    l.c_allocationline_id,
+    l.c_invoice_id,
+    l.c_bpartner_id,
+    l.c_order_id,
+    l.c_payment_id,
+    l.c_cashline_id,
+    l.amount,
+    l.discountamt,
+    l.writeoffamt,
+    l.overunderamt,
+    h.isapproved,
+    h.posted,
+    l.ad_org_id AS c_allocationline_ad_org_id,
+    l.created AS c_allocationline_created,
+    l.createdby AS c_allocationline_createdby,
+    l.datetrx AS c_allocationline_datetrx,
+    l.isactive AS c_allocationline_isactive,
+    l.ismanual AS c_allocationline_ismanual,
+    l.updated AS c_allocationline_updated,
+    l.updatedby AS c_allocationline_updatedby,
+    df.ide_nnf,
+    t.cof_processed,
+    t.cof_processed2,
+    t.cof_borderoname,
+    t.cof_titulo_nossonumero,
+    bi.name AS cof_bankintegrationname,
+    bo.value AS cof_occurrencevalue,
+    bo.name AS cof_occurrencename,
+    l.c_charge_id,
+    COALESCE(p.cof_c_planofinanceiro_id, i.cof_c_planofinanceiro_id) AS cof_c_planofinanceiro_id,
+    cb.c_bp_group_id,
+    cb.cof_tipoparceiro_id,
+    cb.cof_classeparceiro_id,
+    i.c_doctype_id
+   FROM c_allocationhdr h
+     JOIN c_allocationline l ON h.c_allocationhdr_id = l.c_allocationhdr_id
+     LEFT JOIN c_invoice i ON i.c_invoice_id = l.c_invoice_id
+     LEFT JOIN c_payment p ON p.c_payment_id = l.c_payment_id
+     LEFT JOIN lbr_docfiscal df ON df.c_invoice_id = l.c_invoice_id
+     LEFT JOIN cof_titulo t ON t.c_invoice_id = l.c_invoice_id AND t.c_invoicepayschedule_id = l.c_invoicepayschedule_id AND t.isvalid = 'Y'::bpchar
+     LEFT JOIN cof_c_bankintegration bi ON bi.cof_c_bankintegration_id = t.cof_c_bankintegration_id
+     LEFT JOIN cof_c_bankoccurrence bo ON bo.cof_c_bankoccurrence_id = t.cof_c_bankoccurrence_id
+     LEFT JOIN c_bpartner cb ON cb.c_bpartner_id = l.c_bpartner_id;
 
 
 

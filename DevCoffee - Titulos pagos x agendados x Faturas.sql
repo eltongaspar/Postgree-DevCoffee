@@ -154,12 +154,12 @@ select ci.ad_org_id , ao."name", ci.c_bpartner_id, cb."name" ,
 	left join c_bpartner cb on cb.c_bpartner_id = ci.c_bpartner_id --fornecedor / cliente 
 	left join ad_org ao on ao.ad_org_id  = ci.ad_org_id -- empresas 
 where cips.ad_client_id = 5000017
-	and cips.ad_org_id  = 5000049 -- codigo empresa 
+	--and cips.ad_org_id  = 5000049 -- codigo empresa 
 	and ci.issotrx  = 'N' --titulos de contas a pagar 
 	and cips.dueamt > 0 --valores maiord que 0 
 	and cips.isactive = 'Y' -- registro ativo
-	and cips.ispaid  = 'Y' -- titulo pago 
-	and cips.duedate between '2024-11-01' and '2024-11-30';
+	and cips.ispaid  = 'N' -- titulo pago 
+	and cips.duedate between '2025-01-01' and '2025-01-31';
 	--and ci.ispayschedulevalid = 'Y';
 
 -- Pagamentos 
@@ -188,19 +188,22 @@ where cp.ad_client_id = 5000017
 order by cp.c_doctype_id , cdoc."name";
 	
 --Alocação de pagamentos 
-select * from c_allocationline cal
+select cb.c_bpartner_id, cb."name", 
+* from c_allocationline cal
 	left join c_allocationhdr ca on ca.c_allocationhdr_id = cal.c_allocationhdr_id 
 	--left join c_payment cp  on call.c_charge_id is not null 
 				--					and call.c_allocationhdr_id = cal.c_allocationhdr_id 
      			--					and abs(call.amount) = abs(cal.amount) --alocação de pagamentos linhas 
     left join c_bankstatementline cbkl on cal.c_payment_id = cbkl.c_bankstatementline_id --alocação de pagamentos
+    left join c_bpartner cb on cb.c_bpartner_id = cal.c_bpartner_id --fornecedor / cliente 
 where cal.ad_client_id = 5000017 -- cliente
 		--and cal.c_bpartner_id  in (5000050)  --valida de pagamento não é nulo 
 		--and cal.c_invoice_id is null --valida se a fatura é nula
 		--and cal.c_order_id is null --valida se a ordem é nula 
 		--and call.c_allocationline_id is not null 
-  		and ca.docstatus in ('CO','CL')
-  		and ca.dateacct between ('2024-02-01') and ('2024-02-29');
+		--and cal.c_payment_id is null
+  		--and ca.docstatus in ('CO','CL')
+  		and ca.dateacct between ('2025-01-06') and ('2025-01-31');
 
 
 -- Titulos
