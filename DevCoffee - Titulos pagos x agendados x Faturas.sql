@@ -3,17 +3,20 @@
 select ci.ad_org_id , ao."name", ci.c_bpartner_id, cb."name" ,
 	cips.c_invoice_id , 
 	cips.c_payschedule_id, 
-	cips.dueamt,ci.grandtotal,cbkl.trxamt, 
+	cips.dueamt cips,ci.grandtotal ci ,cbkl.trxamt cbkl, cbklcal.trxamt cbklcal,cpcal.payamt cocal, cp.payamt cp,
 	cips.duedate,ci.dateinvoiced,cbkl.dateacct,
 	cips.ispaid, ci.ispaid, 
-	cbkl.c_payment_id,ci.c_payment_id,cips.c_payment_id,cal.c_payment_id,cp.c_payment_id,
+	cbkl.c_payment_id bank, ci.c_payment_id inovoice, cips.c_payment_id schedule, cal.c_payment_id aloc,
+	cp.c_payment_id pay, cpcal.c_payment_id pay_aloc, cbklcal.c_payment_id bank_aloc,
 * from c_invoicepayschedule cips
 	left join c_invoice ci on ci.c_invoice_id  = cips.c_invoice_id --faturas 
 	left join c_bpartner cb on cb.c_bpartner_id = ci.c_bpartner_id --fornecedor / cliente 
 	left join ad_org ao on ao.ad_org_id  = ci.ad_org_id -- empresas 
 	left join c_payment cp on cp.c_payment_id  = ci.c_payment_id --pagamentos
-	left join c_bankstatementline cbkl on cbkl.c_payment_id = cp.c_payment_id --extrato bancario
-	left join c_allocationline cal on cal.c_invoice_id = ci.c_invoice_id --alocaçoes de pagamentos 
+	left join c_bankstatementline cbkl on cbkl.c_payment_id = cips.c_payment_id --extrato bancario
+	left join c_allocationline cal on cal.c_invoicepayschedule_id = cips.c_invoicepayschedule_id --alocaçoes de pagamentos 
+	left join c_payment cpcal on cpcal.c_payment_id = cal.c_payment_id 
+	left join c_bankstatementline cbklcal on cbklcal.c_payment_id = cpcal.c_payment_id 
 where cips.ad_client_id = 5000017
 	--and cips.ad_org_id  = 5000049 -- codigo empresa 
 	--and ci.issotrx  = 'N' --N-pagar / Y-receber
@@ -22,9 +25,9 @@ where cips.ad_client_id = 5000017
 	--and cips.ispaid  = 'N' -- titulo pago 
 	--and ci.ispaid  = 'N' -- titulo pago 
 	--and cips.duedate between '2025-01-01' and '2025-01-31'
-	and cbkl.c_payment_id  is null
-	and cb.c_bpartner_id  in (5160236)
-order by ci.cof_invoice_id ;
+	--and (cbkl.c_payment_id  is null or cbklcal.c_payment_id is null)
+	--and cb.c_bpartner_id  in (5160236)
+	order by ci.c_invoice_id ;
 	--and ci.ispayschedulevalid = 'Y';
 
 --Alocação de pagamentos 
@@ -42,11 +45,29 @@ where cal.ad_client_id = 5000017 -- cliente
 		--and cal.c_order_id is null --valida se a ordem é nula 
 		--and call.c_allocationline_id is not null 
 		--and cal.c_payment_id is null
-  		--and ca.docstatus in ('CO','CL')
+  		and ca.docstatus in ('CO','CL')
   		and ca.dateacct between ('2025-01-01') and ('2025-01-31');
 
 --Pagamentos Alocação 
 select * from c_paymentallocate cpal ;
+
+-- Alocação linhas 
+select * from c_allocationline ca ;
+--Alocao 
+select * from c_allocationhdr ca;
+
+-- Agendamentos de pagementos
+select * from c_payschedule cps;
+
+-- Agendamentos de faturas
+select * from c_invoiceschedule ci;
+
+-- Agendamentod de pagamentos de faturas
+select * from c_invoicepayschedule cips;
+
+--Pagamentos 
+select * from c_payment cp;
+
 
 -- Faturas a pagar 
 select ci.ad_org_id , ao."name", ci.c_bpartner_id, cb."name" ,
