@@ -107,6 +107,7 @@ select 	--ao."name",cba."name",cbkl.dateacct,cbk.updated,cbkl.c_bankstatementlin
 	 	else cbkl.trxamt
 	 end as test, --analise
 	 cbk.updated as data_update,*/
+	 cp.documentno as documento,
 	 CONCAT(CAST(cbkl.dateacct AS TEXT), CAST(cbkl.c_bankstatementline_id AS TEXT)) AS orderby
 	 --cp.user1_id,cp.user2_id,ci.user1_id,ci.user2_id,cil.user1_id,cil.user2_id, --validação de centro de custos - usado para analises 
 																--	cilcc.cil_cc,calant.cacicil_cc,cdoc.user1_id,cdoc.user2_id
@@ -203,7 +204,7 @@ with
 												else 0 end)  > 0) --calcula cancelamentos, devoluções e estornos
 --Tabelas auxiliares temp --CTE (Common Table Expression)
 -- Fim 
---##########################################################################################################################################
+--##########################################################################################################################################											
 --Devoluções cancelamentos e estornos de clientes 
 --Pagamentos Cancelamentos, Estornos e Devoluções 
 select cb.c_bpartner_id,cb."name",

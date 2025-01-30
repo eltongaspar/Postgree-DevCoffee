@@ -1,3 +1,61 @@
+
+-- Agendamento das faturas 
+select ci.ad_org_id , ao."name", ci.c_bpartner_id, cb."name" ,
+	cips.c_invoice_id , cips.c_payschedule_id, cips.c_payment_id,ci.c_payment_id,
+	cips.dueamt, 
+	cips.ispaid, ci.ispaid, 
+* from c_invoicepayschedule cips
+	left join c_invoice ci on ci.c_invoice_id  = cips.c_invoice_id --faturas 
+	left join c_bpartner cb on cb.c_bpartner_id = ci.c_bpartner_id --fornecedor / cliente 
+	left join ad_org ao on ao.ad_org_id  = ci.ad_org_id -- empresas 
+where cips.ad_client_id = 5000017
+	--and cips.ad_org_id  = 5000049 -- codigo empresa 
+	--and ci.issotrx  = 'N' --N-pagar / Y-receber
+	--and cips.dueamt > 0 --valores maiord que 0 
+	and cips.isactive = 'Y' -- registro ativo
+	--and cips.ispaid  = 'N' -- titulo pago 
+	--and ci.ispaid  = 'N' -- titulo pago 
+	and cips.duedate between '2025-01-01' and '2025-01-31';
+	--and ci.ispayschedulevalid = 'Y';
+
+--Alocação de pagamentos 
+select cb.c_bpartner_id, cb."name", 
+* from c_allocationline cal
+	left join c_allocationhdr ca on ca.c_allocationhdr_id = cal.c_allocationhdr_id 
+	--left join c_payment cp  on call.c_charge_id is not null 
+				--					and call.c_allocationhdr_id = cal.c_allocationhdr_id 
+     			--					and abs(call.amount) = abs(cal.amount) --alocação de pagamentos linhas 
+    left join c_bankstatementline cbkl on cal.c_payment_id = cbkl.c_bankstatementline_id --alocação de pagamentos
+    left join c_bpartner cb on cb.c_bpartner_id = cal.c_bpartner_id --fornecedor / cliente 
+where cal.ad_client_id = 5000017 -- cliente
+		--and cal.c_bpartner_id  in (5000050)  --valida de pagamento não é nulo 
+		--and cal.c_invoice_id is null --valida se a fatura é nula
+		--and cal.c_order_id is null --valida se a ordem é nula 
+		--and call.c_allocationline_id is not null 
+		--and cal.c_payment_id is null
+  		--and ca.docstatus in ('CO','CL')
+  		and ca.dateacct between ('2025-01-01') and ('2025-01-31');
+
+-- Faturas a pagar 
+select ci.ad_org_id , ao."name", ci.c_bpartner_id, cb."name" ,
+ci.grandtotal, ci.c_invoice_id ,ci.documentno,
+ci.c_payment_id, ci.user1_id, ci.ispayschedulevalid , ci.ispaid, ci.issotrx,
+* from c_invoice ci
+	left join c_bpartner cb on cb.c_bpartner_id = ci.c_bpartner_id --fornecedor / cliente 
+	left join ad_org ao on ao.ad_org_id  = ci.ad_org_id -- empresas 
+where  ci.ad_client_id = 5000017 -- codigo cliente 
+	and ci.ad_org_id  = 5000049 -- codigo empresa 
+	and ci.issotrx  = 'N' -- N = contas a pagar
+	and ci.isactive  = 'Y' --registroo ativo 
+	and ci.ispaid  = 'Y' -- confirmação de pagamento de titulo 
+	and ci.grandtotal  > 0 -- valores naiores que o 
+	and ci.updated between '2025-01-01' and '2025-01-31' --data da ultima alteração do titulo 
+	and ci.c_payment_id  is not null --validacao pagamento pelo id
+	and ci.ispayschedulevalid = 'Y' --validacao schedule
+	and ci.docstatus = 'CO' --valida status de documento completo
+order by ci.ad_org_id;
+
+
 -- Empresas 
 select ao.ad_org_id as organizacao_id, ao."name" as organizacao_nome
 from ad_org ao 
@@ -124,44 +182,6 @@ from c_bankstatement cbk
 	and cbk.statementdate between '2024-01-01' and '2024-01-31' --datas;
 
 
-
-
--- Faturas a pagar 
-select ci.ad_org_id , ao."name", ci.c_bpartner_id, cb."name" ,
-ci.grandtotal, ci.c_invoice_id ,ci.documentno,
-ci.c_payment_id, ci.user1_id, ci.ispayschedulevalid , ci.ispaid, ci.issotrx,
-* from c_invoice ci
-	left join c_bpartner cb on cb.c_bpartner_id = ci.c_bpartner_id --fornecedor / cliente 
-	left join ad_org ao on ao.ad_org_id  = ci.ad_org_id -- empresas 
-where  ci.ad_client_id = 5000017 -- codigo cliente 
-	and ci.ad_org_id  = 5000049 -- codigo empresa 
-	and ci.issotrx  = 'N' -- N = contas a pagar
-	and ci.isactive  = 'Y' --registroo ativo 
-	and ci.ispaid  = 'Y' -- confirmação de pagamento de titulo 
-	and ci.grandtotal  > 0 -- valores naiores que o 
-	and ci.updated between '2024-11-01' and '2024-11-30' --data da ultima alteração do titulo 
-	and ci.c_payment_id  is not null --validacao pagamento pelo id
-	and ci.ispayschedulevalid = 'Y' --validacao schedule
-	and ci.docstatus = 'CO' --valida status de documento completo
-order by ci.ad_org_id;
-
--- Agendamento das faturas 
-select ci.ad_org_id , ao."name", ci.c_bpartner_id, cb."name" ,
-	cips.c_invoice_id , cips.c_payschedule_id, cips.c_payment_id, cips.dueamt, 
-	ci.ispaid,
-* from c_invoicepayschedule cips
-	left join c_invoice ci on ci.c_invoice_id  = cips.c_invoice_id --faturas 
-	left join c_bpartner cb on cb.c_bpartner_id = ci.c_bpartner_id --fornecedor / cliente 
-	left join ad_org ao on ao.ad_org_id  = ci.ad_org_id -- empresas 
-where cips.ad_client_id = 5000017
-	--and cips.ad_org_id  = 5000049 -- codigo empresa 
-	and ci.issotrx  = 'N' --titulos de contas a pagar 
-	and cips.dueamt > 0 --valores maiord que 0 
-	and cips.isactive = 'Y' -- registro ativo
-	and cips.ispaid  = 'N' -- titulo pago 
-	and cips.duedate between '2025-01-01' and '2025-01-31';
-	--and ci.ispayschedulevalid = 'Y';
-
 -- Pagamentos 
 select cp.c_charge_id,cp.isreceipt ,cb."name" , cp.c_doctype_id , cdoc."name" , cp.user1_id ,
 	coalesce(ci.user1_id,0) as ci_user1_id, coalesce(cil.user1_id,0) as cil_user1_id,
@@ -187,23 +207,7 @@ where cp.ad_client_id = 5000017
 	--and cp.c_doctype_id not in (5002295,5002296,5002339)
 order by cp.c_doctype_id , cdoc."name";
 	
---Alocação de pagamentos 
-select cb.c_bpartner_id, cb."name", 
-* from c_allocationline cal
-	left join c_allocationhdr ca on ca.c_allocationhdr_id = cal.c_allocationhdr_id 
-	--left join c_payment cp  on call.c_charge_id is not null 
-				--					and call.c_allocationhdr_id = cal.c_allocationhdr_id 
-     			--					and abs(call.amount) = abs(cal.amount) --alocação de pagamentos linhas 
-    left join c_bankstatementline cbkl on cal.c_payment_id = cbkl.c_bankstatementline_id --alocação de pagamentos
-    left join c_bpartner cb on cb.c_bpartner_id = cal.c_bpartner_id --fornecedor / cliente 
-where cal.ad_client_id = 5000017 -- cliente
-		--and cal.c_bpartner_id  in (5000050)  --valida de pagamento não é nulo 
-		--and cal.c_invoice_id is null --valida se a fatura é nula
-		--and cal.c_order_id is null --valida se a ordem é nula 
-		--and call.c_allocationline_id is not null 
-		--and cal.c_payment_id is null
-  		--and ca.docstatus in ('CO','CL')
-  		and ca.dateacct between ('2025-01-06') and ('2025-01-31');
+
 
 
 -- Titulos
@@ -303,22 +307,22 @@ where
 	--and ci.ad_org_id  = 5000049 -- codigo empresa
 	and ci.issotrx  = 'N' -- N = contas a pagar
 	and ci.isactive  = 'Y' --registroo ativo 
-	and ci.ispaid  = 'Y' -- confirmação de pagamento de titulo 
+	and ci.ispaid  = 'N' -- confirmação de pagamento de titulo 
 	and ci.grandtotal  > 0 -- valores naiores que o 
-	and ci.updated between '2024-11-01' and '2024-11-30' --data da ultima alteração do titulo 
+	--and ci.updated between '2024-11-01' and '2024-11-30' --data da ultima alteração do titulo 
 	and ci.c_payment_id  is not null --validacao pagamento pelo id
 	and ci.ispayschedulevalid = 'Y' --validacao schedule
 	and ci.docstatus = 'CO' -- status documento completos 
 	and cips.dueamt > 0 --valores maiord que 0 
 	and cips.isactive = 'Y' -- registro ativo
-	and cips.ispaid  = 'Y' -- titulo pago 
-	and cips.duedate between '2024-11-01' and '2024-11-30' -- data de pagamento ou agendamento
+	and cips.ispaid  = 'N' -- titulo pago 
+	--and cips.duedate between '2024-11-01' and '2024-11-30' -- data de pagamento ou agendamento
 	and cp.isactive = 'Y' --registros ativos 
 	and cp.isreceipt  = 'N' --tipo de transação receita ou despesa 
 	and cp.isreconciled  = 'Y' -- conciliação bancária
 	and cp.c_invoice_id is not null --valida se titulos tem faturas
 	and cp.docstatus  = 'CO'--documentos com status completo 
-	and cp.dateacct  between '2024-11-01' and '2024-11-30' --data efetiva do pagamento 
+	--and cp.dateacct  between '2025-01-01' and '2025-01-31' --data efetiva do pagamento 
 order by ci.c_invoice_id;
 
 -- Bancos 

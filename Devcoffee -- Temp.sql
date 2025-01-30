@@ -48,10 +48,10 @@ where ci.dateacct between '2024-11-01' and '2024-11-30'
 -- Pagamentos 
 select cp.c_invoice_id , cp.c_payment_id ,cp.user1_id , cp.user2_id , cp.datetrx,cp.payamt,cp.isreceipt, cp.docstatus , cp.c_charge_id ,cp.c_invoicepayschedule_id ,
 * from c_payment cp
-where cp.datetrx  between '2024-01-01' and '2024-12-31'
-	--and cp.c_payment_id = 5223991
-	and cp.c_invoice_id  in (5248486,5248484,5248482,5248485,5248483,5248481,5248480,5248479,5248477,5248478,5248476)
-	and cp.c_bpartner_id = 5069078;
+where cp.datetrx  between '2025-01-01' and '2025-01-31';
+--and cp.c_payment_id = 5223991
+	--and cp.c_invoice_id  in (5248486,5248484,5248482,5248485,5248483,5248481,5248480,5248479,5248477,5248478,5248476)
+	--and cp.c_bpartner_id = 5069078;
 
 --Alocação de pagamentos linhas
  select  ca.c_allocationhdr_id,cal.c_payment_id,cal.c_invoice_id,cal.c_invoice_id,cal.c_invoicepayschedule_id,
@@ -92,11 +92,13 @@ where cbk.dateacct between '2024-01-01' and '2024-12-31'
 	--and cbkl.c_payment_id  in (5378361,5377971,5378377);
 
 -- agendamentos de pagamentos 
-select cips.c_payment_id, ci.c_invoice_id,
+select cb.c_bpartner_id, cb.name,
+		cips.c_payment_id, ci.c_invoice_id,
 * from c_invoicepayschedule cips
 	left join c_invoice ci on cips.c_invoice_id = ci.c_invoice_id
-where cips.duedate between '2024-11-01' and '2024-11-30'
-	and ci.c_bpartner_id = 5151800
+	left join c_bpartner cb on cb.c_bpartner_id = ci.c_bpartner_id --parceiros
+where cips.duedate between '2025-01-01' and '2025-01-31'
+	and cips.ispaid = 'Y'
 order by cips.c_invoice_id;
 	--and cips.c_payment_id not in (null,0);
 
