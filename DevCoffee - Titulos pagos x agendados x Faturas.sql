@@ -1,19 +1,21 @@
 
 -- Agendamento das faturas 
 select ci.ad_org_id , ao."name", ci.c_bpartner_id, cb."name" ,
-	cips.c_invoice_id ,cips.c_payschedule_id, cips.c_invoicepayschedule_id,
+	cips.c_invoice_id ,cips.c_payschedule_id, cips.c_invoicepayschedule_id,cp.c_payment_id,cpcal.c_payment_id,
 	cips.dueamt cips,ci.grandtotal ci,cp.payamt cp,cbkl.trxamt cbkl,cbklcal.trxamt cbklcal,cpcal.payamt cocal, 
 	cips.duedate,ci.dateinvoiced,cbkl.dateacct,
 	cips.ispaid, ci.ispaid, 
-	cbkl.c_payment_id bank, ci.c_payment_id inovoice, cips.c_payment_id schedule, cal.c_payment_id aloc,
-	cp.c_payment_id pay, cpcal.c_payment_id pay_aloc, cbklcal.c_payment_id bank_aloc,
-cips.* from c_invoicepayschedule cips
+	cbkl.c_payment_id bank, ci.c_payment_id inovoice, cips.c_payment_id schedule, cp.c_payment_id pay,
+	cal.c_payment_id aloc,cpcal.c_payment_id pay_aloc, cbklcal.c_payment_id bank_aloc,
+cips.*,cal.* from c_invoicepayschedule cips
 	left join c_invoice ci on ci.c_invoice_id  = cips.c_invoice_id --faturas 
 	left join c_bpartner cb on cb.c_bpartner_id = ci.c_bpartner_id --fornecedor / cliente 
 	left join ad_org ao on ao.ad_org_id  = ci.ad_org_id -- empresas 
 	left join c_payment cp on cp.c_payment_id  = ci.c_payment_id --pagamentos
 	left join c_bankstatementline cbkl on cbkl.c_payment_id = cp.c_payment_id --extrato bancario
 	left join c_allocationline cal on cal.c_invoicepayschedule_id = cips.c_invoicepayschedule_id --alocaçoes de pagamentos 
+	left join c_payschedule  cps on cal.c_payment_id = cps.c_payschedule_id --agendamentos de pagamentos
+	left join c_paymentallocate cpal on cpal.c_invoicepayschedule_id = cips.c_invoicepayschedule_id --pagamento alocação 
 	left join c_payment cpcal on cpcal.c_payment_id = cal.c_payment_id 
 	left join c_bankstatementline cbklcal on cbklcal.c_payment_id = cpcal.c_payment_id 
 where cips.ad_client_id = 5000017
@@ -25,6 +27,8 @@ where cips.ad_client_id = 5000017
 	--and ci.ispaid  = 'N' -- titulo pago 
 	and cips.duedate between '2025-01-01' and '2025-01-31'
 	--and cb.c_bpartner_id  in (5160236)
+	--and cal.c_invoicepayschedule_id in (5342208) 
+	and cal.c_payment_id = 5415318
 	order by cips.c_invoicepayschedule_id ;
 	--and ci.ispayschedulevalid = 'Y';
 
@@ -75,30 +79,35 @@ where cal.ad_client_id = 5000017 -- cliente
 select * from c_paymentallocate cpal ;
 
 -- Alocação pagamentos linhas 
-select * from c_allocationline cal
-where cal.c_invoicepayschedule_id in (5342208);
+select cal.c_invoicepayschedule_id, cal.c_payment_id,
+* from c_allocationline cal
+where cal.c_invoicepayschedule_id in (5342208)
+	or cal.c_payment_id = 5415318 ;
+
 --Alocao 
 select * from c_allocationhdr ca
-where ca.c_allocationhdr_id in ();
+where ca.c_allocationhdr_id in (5336945);
 
--- Agendamentos de pagementos
-select * from c_payschedule cps;
+-- Agendamentos de pagementos --parcelas
+select * from c_payschedule cps
+where cps.c_payschedule_id  = 5003474;
 
 -- Agendamentos de faturas
 select * from c_invoiceschedule ci;
 
 -- Agendamentod de pagamentos de faturas
 select * from c_invoicepayschedule cips
-where cips.c_invoicepayschedule_id  = 5342208;
+where cips.c_invoicepayschedule_id  = 5373367;
 
 --Pagamentos 
 select * from c_payment cp
-where cp.c_payment_id in (5314085);
+where cp.c_payment_id in (5415318);
 
 -- Extrato bancario linhas
 select * from c_bankstatementline cbkl
-where cbkl.c_payment_id = 5314085;
+where cbkl.c_bpartner_id = 5072386;
 
+select * from c_paymentallocate cpal;
 
 -- Faturas a pagar 
 select ci.ad_org_id , ao."name", ci.c_bpartner_id, cb."name" ,
