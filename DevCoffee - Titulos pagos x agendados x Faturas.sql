@@ -1,19 +1,18 @@
 
 -- Agendamento das faturas 
 select ci.ad_org_id , ao."name", ci.c_bpartner_id, cb."name" ,
-	cips.c_invoice_id , 
-	cips.c_payschedule_id, 
-	cips.dueamt cips,ci.grandtotal ci ,cbkl.trxamt cbkl, cbklcal.trxamt cbklcal,cpcal.payamt cocal, cp.payamt cp,
+	cips.c_invoice_id ,cips.c_payschedule_id, cips.c_invoicepayschedule_id,
+	cips.dueamt cips,ci.grandtotal ci,cp.payamt cp,cbkl.trxamt cbkl,cbklcal.trxamt cbklcal,cpcal.payamt cocal, 
 	cips.duedate,ci.dateinvoiced,cbkl.dateacct,
 	cips.ispaid, ci.ispaid, 
 	cbkl.c_payment_id bank, ci.c_payment_id inovoice, cips.c_payment_id schedule, cal.c_payment_id aloc,
 	cp.c_payment_id pay, cpcal.c_payment_id pay_aloc, cbklcal.c_payment_id bank_aloc,
-* from c_invoicepayschedule cips
+cips.* from c_invoicepayschedule cips
 	left join c_invoice ci on ci.c_invoice_id  = cips.c_invoice_id --faturas 
 	left join c_bpartner cb on cb.c_bpartner_id = ci.c_bpartner_id --fornecedor / cliente 
 	left join ad_org ao on ao.ad_org_id  = ci.ad_org_id -- empresas 
 	left join c_payment cp on cp.c_payment_id  = ci.c_payment_id --pagamentos
-	left join c_bankstatementline cbkl on cbkl.c_payment_id = cips.c_payment_id --extrato bancario
+	left join c_bankstatementline cbkl on cbkl.c_payment_id = cp.c_payment_id --extrato bancario
 	left join c_allocationline cal on cal.c_invoicepayschedule_id = cips.c_invoicepayschedule_id --alocaçoes de pagamentos 
 	left join c_payment cpcal on cpcal.c_payment_id = cal.c_payment_id 
 	left join c_bankstatementline cbklcal on cbklcal.c_payment_id = cpcal.c_payment_id 
@@ -24,10 +23,9 @@ where cips.ad_client_id = 5000017
 	and cips.isactive = 'Y' -- registro ativo
 	--and cips.ispaid  = 'N' -- titulo pago 
 	--and ci.ispaid  = 'N' -- titulo pago 
-	--and cips.duedate between '2025-01-01' and '2025-01-31'
-	--and (cbkl.c_payment_id  is null or cbklcal.c_payment_id is null)
+	and cips.duedate between '2025-01-01' and '2025-01-31'
 	--and cb.c_bpartner_id  in (5160236)
-	order by ci.c_invoice_id ;
+	order by cips.c_invoicepayschedule_id ;
 	--and ci.ispayschedulevalid = 'Y';
 
 --Alocação de pagamentos 
@@ -40,21 +38,48 @@ select cb.c_bpartner_id, cb."name",
     left join c_bankstatementline cbkl on cal.c_payment_id = cbkl.c_payment_id--alocação de pagamentos
     left join c_bpartner cb on cb.c_bpartner_id = cal.c_bpartner_id --fornecedor / cliente 
 where cal.ad_client_id = 5000017 -- cliente
-		and cal.c_bpartner_id  in (5160236)  --valida de pagamento não é nulo 
+		and cal.c_bpartner_id  in (5160236)  --parceiro
 		--and cal.c_invoice_id is null --valida se a fatura é nula
 		--and cal.c_order_id is null --valida se a ordem é nula 
 		--and call.c_allocationline_id is not null 
 		--and cal.c_payment_id is null
   		and ca.docstatus in ('CO','CL')
+  		--and cal.c_payment_id is null
+  		and ca.dateacct between ('2025-01-01') and ('2025-01-31');
+
+
+
+--Alocação de pagamentos Soma
+select 	sum(cal.amount) as Geral,
+	    sum(CASE WHEN cal.amount > 0 THEN cal.amount ELSE 0 END) AS Receita, -- Soma apenas dos valores positivos
+    	sum(CASE WHEN cal.amount < 0 THEN cal.amount ELSE 0 END) AS Despesas -- Soma apenas dos valores negativos
+from c_allocationline cal
+	left join c_allocationhdr ca on ca.c_allocationhdr_id = cal.c_allocationhdr_id 
+	--left join c_payment cp  on call.c_charge_id is not null 
+				--					and call.c_allocationhdr_id = cal.c_allocationhdr_id 
+     			--					and abs(call.amount) = abs(cal.amount) --alocação de pagamentos linhas 
+    left join c_bankstatementline cbkl on cal.c_payment_id = cbkl.c_payment_id--alocação de pagamentos
+    left join c_bpartner cb on cb.c_bpartner_id = cal.c_bpartner_id --fornecedor / cliente 
+where cal.ad_client_id = 5000017 -- cliente
+		--and cal.c_bpartner_id  in (5160236)  --valida de pagamento não é nulo 
+		--and cal.c_invoice_id is null --valida se a fatura é nula
+		--and cal.c_order_id is null --valida se a ordem é nula 
+		--and call.c_allocationline_id is not null 
+		--and cal.c_payment_id is null
+  		and ca.docstatus in ('CO','CL')
+  		and cal.c_payment_id is null
+  		and cal.c_invoicepayschedule_id is null
   		and ca.dateacct between ('2025-01-01') and ('2025-01-31');
 
 --Pagamentos Alocação 
 select * from c_paymentallocate cpal ;
 
--- Alocação linhas 
-select * from c_allocationline ca ;
+-- Alocação pagamentos linhas 
+select * from c_allocationline cal
+where cal.c_invoicepayschedule_id in (5342208);
 --Alocao 
-select * from c_allocationhdr ca;
+select * from c_allocationhdr ca
+where ca.c_allocationhdr_id in ();
 
 -- Agendamentos de pagementos
 select * from c_payschedule cps;
@@ -63,10 +88,16 @@ select * from c_payschedule cps;
 select * from c_invoiceschedule ci;
 
 -- Agendamentod de pagamentos de faturas
-select * from c_invoicepayschedule cips;
+select * from c_invoicepayschedule cips
+where cips.c_invoicepayschedule_id  = 5342208;
 
 --Pagamentos 
-select * from c_payment cp;
+select * from c_payment cp
+where cp.c_payment_id in (5314085);
+
+-- Extrato bancario linhas
+select * from c_bankstatementline cbkl
+where cbkl.c_payment_id = 5314085;
 
 
 -- Faturas a pagar 
@@ -106,18 +137,23 @@ select
 	and cbk.c_bankaccount_id = 5000220 -- bancos
 	and cbk.isactive  = 'Y' --registro ativo
 	and cbk.docstatus  in ('CO','CL')
-	and cbk.statementdate between '2024-02-01' and '2024-02-29' --datas
+	--and cbk.statementdate between '2024-02-01' and '2024-02-29' --datas
 	--and cbk.c_bankstatement_id = 5012848
 	order by cbk.c_bankstatement_id  ;
 
 --Extrato linhas
-select cbkl.ad_org_id ,cbkl.c_payment_id ,cbkl.c_invoice_id ,cbkl.trxamt,
+select ao.name,cba.name,cb.name,
+	cbkl.ad_org_id ,cbkl.c_payment_id ,cbkl.c_invoice_id ,cbkl.trxamt,
 * from c_bankstatementline cbkl
 	left join c_bankstatement cbk on cbk.c_bankstatement_id = cbkl.c_bankstatement_id --extrato bancario 
-where cbkl.dateacct between '2024-02-01' and '2024-02-29'
+	left join c_bpartner cb on cbkl.c_bpartner_id = cb.c_bpartner_id 
+	left join c_bankaccount cba on cba.c_bankaccount_id = cbk.c_bankaccount_id --contas bancarias
+	left join ad_org ao on ao.ad_org_id  = cbkl.ad_org_id -- empresas 
+where cbkl.dateacct between '2024-01-01' and '2025-01-31'
 	and cbkl.isactive  = 'Y' --registro ativo
-	and cbkl.ad_org_id = 5000050 -- organizacao
-	and cbk.c_bankaccount_id = 5000220 -- bancos
+	--and cbkl.ad_org_id = 5000050 -- organizacao
+	and cbkl.c_payment_id In (5413245,5399796,5368047,5381637)
+	--and cbk.c_bankaccount_id = 5000220 -- bancos
 	--and cbkl.c_bpartner_id  = 5151800;
  
 
@@ -454,7 +490,7 @@ where cp.ad_client_id = 5000017
 	--and cp.user1_id not in (999999)
 	--and cp.payamt  < 0 
 	--and cp.c_doctype_id not in (5002295,5002296,5002339,5002340,5002342) --tipos de documentos 
-	and cp.dateacct  between '2024-11-01' and '2024-11-30';
+	and cp.dateacct  between '2025-01-01' and '2025-01-31';
 
 --Alocação de pagamentos 
 select
@@ -472,7 +508,7 @@ where cal.ad_client_id = 5000017 -- cliente
 		and cal.c_order_id is null --valida se a ordem é nula 
 		and call.c_allocationline_id is not null 
   		and ca.docstatus in ('CO','CL')
-  		and ca.dateacct between ('2024-11-01') and ('2024-11-30');
+  		and ca.dateacct between ('2025-01-01') and ('2025-01-31');
 
 
 
